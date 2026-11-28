@@ -33,6 +33,9 @@ export function previewV46MarkSettingsMigration({legacy,schoolId,classId,subject
  return Object.freeze({settings:Object.freeze({...settings,components:Object.freeze(components.map(x=>Object.freeze(x)))}),writeAuthorized:false,requiresManualApproval:true,warning:'Read-only preview: verify subject identity, term, class and component maxima before any migration'});
 }
 
+export const legacySettingsClassValue=v=>(typeof v==='string'||typeof v==='number'?String(v):'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/^(?:(?:class|कक्षा)\s*)?([1-9]|10)$/i)?.[1];
+const hasLegacyValue=v=>v!==undefined&&v!==null&&v!=='';
+
 // Share the existing candidate aliases with the staged audit. Aliases are
 // suggestions only; the administrator sees the original label before saving.
 export function legacySettingsSubjectKey(label,grade){
@@ -54,11 +57,13 @@ export function prepareLegacySettingsEditor({schoolId,classId,subjectId,examId,s
  for(const r of records)if(!r||typeof r.id!=='string'||!r.id||r.id.includes('/')||r.fields?.schoolId!==schoolId||r.fields?.classGroup!==group)throw Error('Foreign or invalid legacy settings record');
  const candidates=records.filter(({fields:d})=>legacySettingsSubjectKey(d.subject,classId)===key&&
   !['classId','subjectId','examId','term','examName'].some(k=>d[k]!==undefined&&d[k]!==null&&d[k]!==''));
- const exact=candidates.filter(({fields:d})=>String(d.className??'')===classId);
- const fallback=candidates.filter(({fields:d})=>!d.className);
+ // A malformed class-specific source must never masquerade as a group fallback.
+ if(candidates.some(({fields:d})=>hasLegacyValue(d.className)&&!groups[group].includes(legacySettingsClassValue(d.className))))throw Error('Invalid legacy class-specific scope');
+ const exact=candidates.filter(({fields:d})=>legacySettingsClassValue(d.className)===classId);
+ const fallback=candidates.filter(({fields:d})=>!hasLegacyValue(d.className));
  const choices=exact.length?exact:fallback;
  if(choices.length!==1)throw Error(choices.length?'Multiple preferred legacy settings':'No matching saved legacy settings');
- const source=choices[0],legacy={...source.fields,subject:subject.name};
+ const source=choices[0],legacy={...source.fields,subject:subject.name,...(exact.length?{className:classId}:{className:''})};
  const input={legacy,schoolId,classId,subjectId,examId,verifiedSubjectName:subject.name};
  let components;
  if(Number(classId)<=5&&isLegacyPrimaryAchievement(legacy)){

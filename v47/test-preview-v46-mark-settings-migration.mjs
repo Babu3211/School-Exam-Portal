@@ -44,3 +44,21 @@ import {prepareLegacySettingsEditor} from './preview-v46-mark-settings-migration
  assert.equal(result.settings.examId,'final');
 }
 console.log('PASS V46 source precedence editor: saved maxima, scope, duplicates, primary derived field and explicit term');
+
+// Legacy audit and browser editor must recognize the same class spellings.
+{
+ const schoolId='12345',classId='9',subjectId='computer',examId='final';
+ const scope={schoolId,classId,subjectId,examId,subjects:[{id:subjectId,name:'Computer',active:true}]};
+ const base={schoolId,classGroup:'9-10',subject:'Computer',components:[{name:'Project',fullMarks:137.5}]};
+ const group={id:'group',fields:{...base,components:[{name:'Project',fullMarks:50}]}};
+ for(const className of ['कक्षा ९','कक्षा९','Class 9','class9','९',9,' 9 ']){
+  const exact={id:'exact',fields:{...base,className}};
+  const result=prepareLegacySettingsEditor({...scope,records:[group,exact]});
+  assert.equal(result.sourceId,'exact');assert.equal(result.settings.components[0].fullMarks,137.5);assert.equal(result.writeAuthorized,false);
+  assert.throws(()=>prepareLegacySettingsEditor({...scope,records:[exact,{id:'duplicate',fields:{...base,className:'9'}}]}),/Multiple preferred/);
+ }
+ for(const className of [0,false,'8','कक्षा ११','unknown',' ',{},[]])assert.throws(()=>prepareLegacySettingsEditor({...scope,records:[group,{id:'bad',fields:{...base,className}}]}),/Invalid legacy class-specific scope/);
+ for(const className of [undefined,null,''])assert.equal(prepareLegacySettingsEditor({...scope,records:[{id:'group',fields:{...base,className}}]}).sourceScope,'Group fallback');
+ assert.equal(prepareLegacySettingsEditor({...scope,records:[group,{id:'other',fields:{...base,className:'कक्षा १०'}}]}).sourceId,'group');
+}
+console.log('PASS normalized legacy class identity: exact precedence, duplicates, malformed scope refused, valid group fallback');

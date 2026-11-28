@@ -10,7 +10,7 @@ import {join} from 'node:path';
 import {excelWorkbook} from '../excel-workbook.mjs';
 import {auditAllTermSettingsCoverage,auditEntrySettingsCoverage} from '../entry-settings-coverage.mjs';
 import {prepareNewSubjectExamSettings} from '../create-subject-exam-settings.mjs';
-import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement,legacySettingsSubjectKey as candidateKey} from '../preview-v46-mark-settings-migration.mjs';
+import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement,legacySettingsSubjectKey as candidateKey,legacySettingsClassValue as classValue} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
 const project='smss-exam-portal-v47',terms=['1st','2nd','3rd','final'];
 const classes=Array.from({length:10},(_,i)=>String(i+1));
@@ -34,7 +34,6 @@ export function decodeScopedDocument(doc,prefix){
 }
 const groups={'1-3':['1','2','3'],'4-5':['4','5'],'6-8':['6','7','8'],'9-10':['9','10']};
 const norm=v=>typeof v==='string'?v.normalize('NFC').trim().toLocaleLowerCase('en'):'';
-const classValue=v=>(typeof v==='string'||typeof v==='number'?String(v):'').trim().replace(/[०-९]/g,d=>String('०१२३४५६७८९'.indexOf(d))).match(/^(?:(?:class|कक्षा)\s*)?([1-9]|10)$/i)?.[1];
 const termAliases=new Map(Object.entries({'1st':'1st','first':'1st','2nd':'2nd','second':'2nd','3rd':'3rd','third':'3rd','final':'final','annual':'final'}));
 const termValue=v=>termAliases.get(norm(v));
 const present=v=>v!==undefined&&v!==null&&v!=='';
