@@ -18,3 +18,29 @@ assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,com
 assert.throws(()=>previewV46MarkSettingsMigration({...args,legacy:{...legacy,components:[{name:'Oversize',fullMarks:5001}]}}),/positive full marks/);
 assert.throws(()=>previewV46MarkSettingsMigration({...args,classId:'1',legacy:{classGroup:'1-3',subject:'Computer',components:[{name:'No. of Learning Achievement',fullMarks:3},{name:'Full Marks',fullMarks:12},{name:'Obtained Learning Achievement',fullMarks:12}]}}),/dedicated IEMIS migration/);
 console.log('V47 read-only V46 mark settings schema preview passed');
+
+import {prepareLegacySettingsEditor} from './preview-v46-mark-settings-migration.mjs';
+{
+ const schoolId='12345',classId='6',subjectId='math',examId='2nd';
+ const subjects=[{id:subjectId,name:'Mathematics',active:true}];
+ const base={schoolId,classGroup:'6-8',subject:'Math',components:[{name:'Assessment',fullMarks:137.5},{name:'Project',fullMarks:62.5}]};
+ const group={id:'old_group',fields:{...base,components:[{name:'Assessment',fullMarks:50}]}};
+ const exact={id:'old_class',fields:{...base,className:'6'}};
+ const scope={schoolId,classId,subjectId,examId,subjects};
+ const result=prepareLegacySettingsEditor({...scope,records:[group,exact]});
+ assert.equal(result.sourceId,'old_class');assert.equal(result.sourceScope,'Class-specific');assert.deepEqual(result.settings.components.map(c=>c.fullMarks),[137.5,62.5]);assert.equal(result.writeAuthorized,false);
+ assert.equal(prepareLegacySettingsEditor({...scope,records:[group]}).sourceScope,'Group fallback');
+ assert.throws(()=>prepareLegacySettingsEditor({...scope,records:[group,{...exact,fields:{...exact.fields,components:[]}}]}),/components/i);
+ assert.throws(()=>prepareLegacySettingsEditor({...scope,records:[exact,{...exact,id:'duplicate'}]}),/Multiple preferred/);
+ assert.throws(()=>prepareLegacySettingsEditor({...scope,subjects:[...subjects,{id:'other',name:'Math',active:true}],records:[exact]}),/ambiguous/);
+ assert.throws(()=>prepareLegacySettingsEditor({...scope,records:[{...exact,fields:{...exact.fields,schoolId:'99999'}}]}),/Foreign/);
+ assert.throws(()=>prepareLegacySettingsEditor({...scope,records:[{...exact,fields:{...exact.fields,term:'1st'}}]}),/No matching/);
+}
+{
+ const scope={schoolId:'12345',classId:'1',subjectId:'math',examId:'final',subjects:[{id:'math',name:'Mathematics',active:true}]};
+ const fields={schoolId:'12345',classGroup:'1-3',className:'1',subject:'गणित',components:[{name:'No. of Learning Achievement',fullMarks:3},{name:'Full Marks',fullMarks:12},{name:'Obtained Learning Achievement',fullMarks:12}]};
+ const result=prepareLegacySettingsEditor({...scope,records:[{id:'primary',fields}]});
+ assert.deepEqual(result.settings.components.map(c=>[c.key,c.fullMarks]),[['count',3],['obtained',12]]);
+ assert.equal(result.settings.examId,'final');
+}
+console.log('PASS V46 source precedence editor: saved maxima, scope, duplicates, primary derived field and explicit term');

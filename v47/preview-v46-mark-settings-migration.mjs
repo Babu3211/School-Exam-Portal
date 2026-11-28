@@ -1,4 +1,8 @@
 import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs';
+import {primarySubjectKey} from './primary-assessment-teacher-worksheet.mjs';
+import {iemisSubjectKey} from './iemis-ledger.js';
+import {previewV46PrimaryAchievementSettings} from './preview-v46-primary-achievement-settings.mjs';
+import {prepareNewSubjectExamSettings} from './create-subject-exam-settings.mjs';
 
 // READ-ONLY V46 -> V47 compatibility preview. No database writes.
 // V46 uses classGroup/subject and component name/fullMarks; V47 requires
@@ -27,4 +31,41 @@ export function previewV46MarkSettingsMigration({legacy,schoolId,classId,subject
  const settings={schoolId,classId,subjectId,examId,active:true,components};
  validateConfiguredMarkComponents(settings,{schoolId,classId,subjectId,examId});
  return Object.freeze({settings:Object.freeze({...settings,components:Object.freeze(components.map(x=>Object.freeze(x)))}),writeAuthorized:false,requiresManualApproval:true,warning:'Read-only preview: verify subject identity, term, class and component maxima before any migration'});
+}
+
+// Share the existing candidate aliases with the staged audit. Aliases are
+// suggestions only; the administrator sees the original label before saving.
+export function legacySettingsSubjectKey(label,grade){
+ if(typeof label!=='string'||!label.trim())return null;
+ return Number(grade)<=5?primarySubjectKey(label)??iemisSubjectKey(label):iemisSubjectKey(label);
+}
+// V46 index.html blob 1d5ab6bd9c8d1aed881b32b27cf19c78ecb58515,
+// selectedEntrySetting() and updateMarkSubjectOptions(): class-specific
+// saved record takes precedence over a group fallback. Never choose between
+// multiple records at the preferred precedence or silently repair a bad record.
+// This copies SAVED components only, not V46's derived annual theory column.
+export function prepareLegacySettingsEditor({schoolId,classId,subjectId,examId,subjects,records}){
+ const group=Object.keys(groups).find(g=>groups[g].includes(classId));
+ if(!group||!Array.isArray(subjects)||subjects.length>100||!Array.isArray(records)||records.length>200)throw Error('Unsupported legacy settings scope');
+ if(new Set(subjects.map(s=>s.id)).size!==subjects.length||new Set(records.map(r=>r.id)).size!==records.length)throw Error('Duplicate catalogue or settings identity');
+ const subject=subjects.find(s=>s.id===subjectId&&s.active===true);
+ const key=legacySettingsSubjectKey(subject?.name,classId);
+ if(!key||subjects.filter(s=>s.active===true&&legacySettingsSubjectKey(s.name,classId)===key).length!==1)throw Error('Legacy subject identity is ambiguous');
+ for(const r of records)if(!r||typeof r.id!=='string'||!r.id||r.id.includes('/')||r.fields?.schoolId!==schoolId||r.fields?.classGroup!==group)throw Error('Foreign or invalid legacy settings record');
+ const candidates=records.filter(({fields:d})=>legacySettingsSubjectKey(d.subject,classId)===key&&
+  !['classId','subjectId','examId','term','examName'].some(k=>d[k]!==undefined&&d[k]!==null&&d[k]!==''));
+ const exact=candidates.filter(({fields:d})=>String(d.className??'')===classId);
+ const fallback=candidates.filter(({fields:d})=>!d.className);
+ const choices=exact.length?exact:fallback;
+ if(choices.length!==1)throw Error(choices.length?'Multiple preferred legacy settings':'No matching saved legacy settings');
+ const source=choices[0],legacy={...source.fields,subject:subject.name};
+ const input={legacy,schoolId,classId,subjectId,examId,verifiedSubjectName:subject.name};
+ let components;
+ if(Number(classId)<=5&&isLegacyPrimaryAchievement(legacy)){
+  const p=previewV46PrimaryAchievementSettings(input);
+  components=[{key:'count',name:'No. of Learning Achievement',fullMarks:p.learningAchievementCount},{key:'obtained',name:'Obtained Learning Achievement',fullMarks:p.obtainedAchievementMaximum}];
+ }else components=previewV46MarkSettingsMigration(input).settings.components;
+ const settings=prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId,components});
+ if(settings.components.some(c=>/[,\r\n]/.test(c.name)))throw Error('Legacy component label requires manual entry');
+ return Object.freeze({settings,sourceId:source.id,sourceSubject:source.fields.subject,sourceScope:exact.length?'Class-specific':'Group fallback',writeAuthorized:false,requiresManualApproval:true});
 }

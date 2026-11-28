@@ -10,10 +10,8 @@ import {join} from 'node:path';
 import {excelWorkbook} from '../excel-workbook.mjs';
 import {auditAllTermSettingsCoverage,auditEntrySettingsCoverage} from '../entry-settings-coverage.mjs';
 import {prepareNewSubjectExamSettings} from '../create-subject-exam-settings.mjs';
-import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement} from '../preview-v46-mark-settings-migration.mjs';
+import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement,legacySettingsSubjectKey as candidateKey} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
-import {iemisSubjectKey} from '../iemis-ledger.js';
-import {primarySubjectKey} from '../primary-assessment-teacher-worksheet.mjs';
 const project='smss-exam-portal-v47',terms=['1st','2nd','3rd','final'];
 const classes=Array.from({length:10},(_,i)=>String(i+1));
 const requireScope=sid=>{if(typeof sid!=='string'||!/^\d{5,20}$/.test(sid))throw Error('Invalid school ID')};
@@ -45,10 +43,6 @@ const countBy=(rows,key)=>Object.fromEntries([...new Set(rows.map(key))].sort().
 // group setting to all exams. All raw labels, IDs, and scores stay in memory.
 // Use existing V46/V47 subject aliases for candidate discovery only.
 // Never replace a subject ID, assign a teacher or choose an exam from aliases.
-const candidateKey=(label,grade)=>{
- if(typeof label!=='string'||!label.trim())return null;
- return Number(grade)<=5?primarySubjectKey(label)??iemisSubjectKey(label):iemisSubjectKey(label);
-};
 function legacyCandidateRows({schoolId,subjects,settings}){
  const rows=[];
  for(const {id,fields:d} of settings){
