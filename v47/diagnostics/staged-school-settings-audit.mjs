@@ -96,11 +96,10 @@ export function summarizeLegacySubjectCandidates(args){
 // Preview a term-specific canonical settings shape without authorizing that
 // term. The original source components/maxima are preserved; the primary
 // derived Full Marks column is omitted only in the candidate schema.
-function termCompatibility(row,schoolId,examId){
+function validatedCandidateSettings(row,schoolId,examId){
  const target=row.candidates[0],classId=target.fields.class,subjectId=target.id;
  const legacy={...row.legacy,subject:target.fields.name,...(row.bucket!=='group or unknown'?{className:row.bucket}:{})};
  const args={legacy,schoolId,classId,subjectId,examId,verifiedSubjectName:target.fields.name};
- try{
   let components;
   if(Number(classId)<=5&&isLegacyPrimaryAchievement(legacy)){
    const p=previewV46PrimaryAchievementSettings(args);
@@ -108,7 +107,12 @@ function termCompatibility(row,schoolId,examId){
   }else{
    components=previewV46MarkSettingsMigration(args).settings.components;
   }
-  const settings=prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId,components});
+  return prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId,components});
+}
+function termCompatibility(row,schoolId,examId){
+ try{
+  const target=row.candidates[0],classId=target.fields.class,subjectId=target.id;
+  const settings=validatedCandidateSettings(row,schoolId,examId);
   const audit=auditEntrySettingsCoverage({schoolId,classId,examId,subjects:[{id:subjectId,name:target.fields.name,active:true}],settings:[settings]});
   return audit.rows[0].status==='Schema match'?'Schema compatible':audit.rows[0].status==='Configured settings valid'?'Configured settings valid':'Invalid candidate settings';
  }catch{return 'Invalid candidate settings'}
@@ -130,15 +134,29 @@ export function summarizeTermCompatibility({schoolId,subjects,settings}){
 // Review every registered subject, including group-only sources and overlaps.
 // Never choose a group setting over a class-specific setting (or vice versa)
 // without independently verified precedence. No term assignment or writes.
-export function summarizeRegisteredSubjectCoverage({schoolId,subjects,settings}){
+function registeredSubjectRows({schoolId,subjects,settings}){
  const rows=legacyCandidateRows({schoolId,subjects,settings});
  const active=subjects.filter(r=>r.fields.active===true&&classes.includes(r.fields.class));
  const byId=new Map(active.map(r=>[r.id,[]]));
  for(const row of rows)for(const candidate of row.candidates)if(byId.has(candidate.id))byId.get(candidate.id).push({row,candidate});
- const coverage=active.map(candidate=>{
+ return active.map(candidate=>{
   const sources=byId.get(candidate.id),classId=candidate.fields.class;
-  let status='No candidate source';
-  if(sources.length>1)status='Overlapping source records';
+  let status='No candidate source',overlap='Not applicable';
+  if(sources.length>1){
+   status='Overlapping source records';
+   if(sources.some(({row})=>row.kind==='Ambiguous within class'))overlap='Ambiguous subject identity';
+   else{
+    try{
+     // Match the actual ordered labels and maxima, not totals or the IEMIS reference.
+     // Preserve component ordering and labels exactly; no alias-based equivalence.
+     const signatures=sources.map(({row})=>{
+      const cfg=validatedCandidateSettings({...row,candidates:[candidate]},schoolId,'1st');
+      return JSON.stringify(cfg.components.map(c=>[c.name,c.fullMarks]));
+     });
+     overlap=new Set(signatures).size===1?'Identical validated components':'Different configured components';
+    }catch{overlap='Invalid or unverified source components'}
+   }
+  }
   else if(sources.length===1){
    const {row}=sources[0];
    if(row.kind==='Ambiguous within class')status='Ambiguous subject identity';
@@ -148,10 +166,15 @@ export function summarizeRegisteredSubjectCoverage({schoolId,subjects,settings})
     status=valid==='Invalid candidate settings'?'Invalid source components':row.bucket==='group or unknown'?'Group source review required':'Single class source valid';
    }
   }
-  return {classId,status};
+  return {classId,status,overlap,candidate,sources};
  });
- return {registeredSubjects:active.length,classification:countBy(coverage,r=>r.status),
-  byClass:classes.map(classId=>({classId,counts:countBy(coverage.filter(r=>r.classId===classId),r=>r.status)})),
+}
+export function summarizeRegisteredSubjectCoverage(args){
+ const coverage=registeredSubjectRows(args);
+ const overlaps=coverage.filter(r=>r.status==='Overlapping source records');
+ return {registeredSubjects:coverage.length,classification:countBy(coverage,r=>r.status),
+  overlapClassification:countBy(overlaps,r=>r.overlap),
+  byClass:classes.map(classId=>({classId,counts:countBy(coverage.filter(r=>r.classId===classId),r=>r.status),overlaps:countBy(overlaps.filter(r=>r.classId===classId),r=>r.overlap)})),
   termAssigned:false,writeAuthorized:false};
 }
 function orphanAssignmentCandidates({subjects,assignments}){
@@ -255,7 +278,9 @@ export function buildLocalReviewWorkbooks(inputs){
   return [schoolId,r.id,str(a.uid),str(a.classId),str(a.subjectId),label,matches.length,matches.length===1?matches[0].id:'',matches.length===1?matches[0].fields.name:'',status,'Review only — no teacher assignment authorized'];
  });
  const assignmentBlob=excelWorkbook(['School ID','Assignment ID','Teacher UID','Class','Missing subject ID','Stored subject label','Candidate count','Unique candidate ID','Unique candidate name','Review status','Notice'],assignmentRows,{sheetName:'Missing assignment IDs'});
- return {settingsBlob,assignmentBlob,settingsRows:rows.length,assignmentRows:assignmentRows.length,writeAuthorized:result.writeAuthorized};
+ const coverageRows=registeredSubjectRows({schoolId,subjects,settings:legacy}).flatMap(({classId,status,overlap,candidate,sources})=>(sources.length?sources:[null]).map(source=>[schoolId,classId,candidate.id,candidate.fields.name,status,overlap,source?.row.id??'',source?str(source.row.legacy.subject):'',source?components(source.row.legacy):'','', 'Review only; preserve original settings']));
+ const coverageBlob=excelWorkbook(['School ID','Class','Subject ID','Subject','Source status','Overlap comparison','Legacy settings ID','Legacy subject label','Original component maxima','Approved source ID (operator review only)','Notice'],coverageRows,{sheetName:'Registered subject review'});
+ return {settingsBlob,assignmentBlob,coverageBlob,settingsRows:rows.length,assignmentRows:assignmentRows.length,coverageRows:coverageRows.length,writeAuthorized:result.writeAuthorized};
 }
 // Only the previously configured V47 service-account secret is accepted in CI.
 // This does not request extra IAM grants, nor expose tokens or raw fields.
@@ -336,6 +361,7 @@ async function main(){
   const dir=await mkdtemp(join(homedir(),'smss-v47-review-'));
   await writeFile(join(dir,'settings-review.xlsx'),Buffer.from(await files.settingsBlob.arrayBuffer()),{flag:'wx',mode:0o600});
   await writeFile(join(dir,'assignment-review.xlsx'),Buffer.from(await files.assignmentBlob.arrayBuffer()),{flag:'wx',mode:0o600});
+  await writeFile(join(dir,'registered-subject-review.xlsx'),Buffer.from(await files.coverageBlob.arrayBuffer()),{flag:'wx',mode:0o600});
   console.log('Private local workbooks saved: '+dir+'; settings rows '+files.settingsRows+'; assignment rows '+files.assignmentRows);
  }
  console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; NOT A CONSISTENT SNAPSHOT OR RELEASE APPROVAL');

@@ -128,3 +128,24 @@ import {summarizeRegisteredSubjectCoverage} from './diagnostics/staged-school-se
  const files=buildLocalReviewWorkbooks(input);assert.equal(files.assignmentRows,3);
  assert.match(new TextDecoder().decode(await files.assignmentBlob.arrayBuffer()),/No matching class subject/);
 }
+
+{
+ const a=row('math6',{class:'6',name:'Mathematics',active:true});
+ const b=row('math7',{class:'7',name:'Mathematics',active:true});
+ const group=row('group',{classGroup:'6-8',subject:'Math',components:[{name:'Assessment',fullMarks:137.5},{name:'Project',fullMarks:62.5}]});
+ const same=row('same',{...group.fields,className:'6',subject:'Mathematics'});
+ const other=row('other',{...group.fields,className:'7',components:[{name:'Assessment',fullMarks:100},{name:'Project',fullMarks:100}]});
+ const input={...args,subjects:[a,b],settings:[group,same,other],assignments:[]};
+ const r=summarizeRegisteredSubjectCoverage(input);
+ assert.equal(r.classification['Overlapping source records'],2);
+ assert.equal(r.overlapClassification['Identical validated components'],1);
+ assert.equal(r.overlapClassification['Different configured components'],1);
+ assert.equal(r.writeAuthorized,false);assert.equal(r.termAssigned,false);
+ const files=buildLocalReviewWorkbooks(input);
+ assert.equal(files.coverageRows,4);
+ const content=new TextDecoder().decode(await files.coverageBlob.arrayBuffer());
+ assert.match(content,/Identical validated components/);assert.match(content,/Different configured components/);assert.match(content,/137.5/);
+ const swapped={...same,fields:{...same.fields,components:[...same.fields.components].reverse()}};
+ assert.equal(summarizeRegisteredSubjectCoverage({...input,settings:[group,swapped,other]}).overlapClassification['Different configured components'],2);
+}
+console.log('PASS duplicate sources: ordered labels and configured maxima, equal totals with different parts, private review workbook');
