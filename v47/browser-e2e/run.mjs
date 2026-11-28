@@ -137,6 +137,7 @@ try{
   assert.equal(await page.locator('#verifiedDashboard').isVisible(),false);
   assert.equal(await page.locator('#dashboardConnect').isVisible(),false);
   assert.equal(await page.locator('#dashboardLoginFields').isVisible(),true);
+  if(await page.locator('#rememberedSchool').isVisible())await page.locator('#changeSchool').click();
   await page.locator('#dashboardSchool').fill(sid);
   await page.locator('#dashboardEmail').fill(loginEmail);
   await page.locator('#dashboardPassword').fill(password);
@@ -936,6 +937,45 @@ try{
  }
  for(const [sid,uid] of [[schools[1].sid,'alpha-viewer'],[schools[0].sid,'beta-admin']]){
   const {context,page,errors}=await newSession();try{await login(page,sid,uid,false);assert.deepEqual(errors,[])}finally{await context.close()}
+ }
+ // Remember only the last verified school on this browser. A remembered ID
+ // is not authorization, and a failed foreign login cannot replace it.
+ {
+  const {context,page,errors}=await newSession();
+  try{
+   await page.setViewportSize({width:375,height:812});
+   const alpha=schools[0].sid,beta=schools[1].sid,key='smss-v47-remembered-school-id';
+   assert.equal(await page.goto(origin+'/')!==null,true);
+   assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),null);
+   await login(page,alpha,'alpha-teacher');
+   assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),alpha);
+   await page.locator('#dashboardLogout').click();
+   await wait(page,()=>document.getElementById('dashboardStatus').textContent.includes('Logout सफल'));
+   await page.reload();await wait(page,()=>!document.getElementById('dashboardLogin').disabled);
+   assert.equal(await page.locator('#dashboardSchoolField').isVisible(),false);
+   assert.equal(await page.locator('#rememberedSchoolId').textContent(),alpha);
+   assert.equal(await page.locator('#verifiedDashboard').isVisible(),false);
+   await page.locator('#dashboardEmail').fill(email('beta-admin'));
+   await page.locator('#dashboardPassword').fill(password);
+   await page.locator('#dashboardLogin').click();
+   await wait(page,()=>document.getElementById('dashboardStatus').textContent.includes('Login असफल'));
+   assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),alpha);
+   assert.equal(await page.locator('#verifiedDashboard').isVisible(),false);
+   await page.locator('#dashboardEmail').fill(email('alpha-teacher'));
+   await page.locator('#dashboardPassword').fill(password);
+   await page.locator('#dashboardLogin').click();
+   await wait(page,()=>!document.getElementById('verifiedDashboard').hidden);
+   assert.match(await page.locator('#schoolIdentity').textContent(),/teacher/);
+   await page.locator('#dashboardLogout').click();
+   await wait(page,()=>document.getElementById('dashboardStatus').textContent.includes('Logout सफल'));
+   await page.locator('#changeSchool').click();
+   assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),null);
+   assert.equal(await page.locator('#dashboardSchool').inputValue(),'');
+   await login(page,beta,'beta-admin');
+   assert.equal(await page.evaluate(k=>localStorage.getItem(k),key),beta);
+   assert.deepEqual(errors,[]);
+  }finally{await context.close()}
+  console.log('PASS remembered school across logout/reload, foreign account denied, teacher email/password login, Change School verified');
  }
  // Verify actual Attendance page, default Nepal date, roster name and Viewer read-only controls.
  for(const [school,uid,role] of [[schools[0],'alpha-admin','school_admin'],[schools[0],'alpha-viewer','viewer'],[schools[1],'beta-admin','school_admin']]){

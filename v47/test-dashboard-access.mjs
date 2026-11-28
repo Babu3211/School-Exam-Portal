@@ -53,3 +53,11 @@ const teacherLinks=[...html.matchAll(/<a\b[^>]*href="\.\/teacher-assigned-class\
 assert.equal(teacherLinks.length,3);
 assert.ok(teacherLinks.every(([tag])=>tag.includes('data-required-role="teacher"')&&tag.includes('data-school-module')));
 assert.equal((js.match(/moduleAccess\(link\)/g)??[]).length,3);
+
+assert.match(html,/id="rememberedSchoolId"/);assert.match(html,/id="changeSchool" type="button"/);
+assert.match(js,/localStorage\.setItem\(REMEMBERED_SCHOOL_KEY,sid\)/);
+assert.match(js,/localStorage\.removeItem\(REMEMBERED_SCHOOL_KEY\)/);
+assert.match(js,/sessionStorage\.setItem\(SCHOOL_SELECTION_KEY,schoolId\);rememberVerifiedSchool\(schoolId\)/);
+assert.match(js,/getDocFromServer\(api\.doc\(db/);
+assert.doesNotMatch(js,/localStorage\.setItem\([^\n]*(?:password|role|uid)/i);
+console.log('PASS school preference is distinct from verified session; no stored credentials or role');

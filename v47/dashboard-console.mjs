@@ -28,8 +28,32 @@ async function showRecentActivity(){
 }
 const MAX_IDLE_MS=60*60*1000;
 const SCHOOL_SELECTION_KEY='smss-v47-dashboard-school';
+// A device preference only. Never store a password, UID, role or authority here.
+const REMEMBERED_SCHOOL_KEY='smss-v47-remembered-school-id';
+function readRememberedSchool(){
+ try{const value=localStorage.getItem(REMEMBERED_SCHOOL_KEY);return value?validateSchoolId(value):null}catch{return null}
+}
+function showRememberedSchool(sid){
+ $('dashboardSchool').value=sid??'';
+ $('dashboardSchoolField').hidden=!!sid;
+ $('rememberedSchool').hidden=!sid;
+ $('rememberedSchoolId').textContent=sid??'';
+}
+function rememberVerifiedSchool(sid){
+ validateSchoolId(sid);
+ try{localStorage.setItem(REMEMBERED_SCHOOL_KEY,sid)}catch{/* optional preference; login must still work */}
+ showRememberedSchool(sid);
+}
+$('changeSchool').onclick=()=>{
+ if(busy||verified)return;
+ try{localStorage.removeItem(REMEMBERED_SCHOOL_KEY)}catch{}
+ showRememberedSchool(null);
+ $('dashboardEmail').value='';$('dashboardPassword').value='';
+ $('dashboardSchool').focus();message('अर्को विद्यालयको IEMIS ID राख्नुहोस्।');
+};
+showRememberedSchool(readRememberedSchool());
 const moduleAccess=link=>link.dataset.requiredRole==='school_admin'?'school-admin':link.dataset.requiredRole==='teacher'?'teacher':link.dataset.requiredRole===undefined?'module':'unsupported';
-const readDocument=async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
+const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 async function verifiedSchoolLabel(schoolId,registryName){
  const settings=await readDocument('schools/'+schoolId+'/school_settings/profile');
  if(settings&&settings.schoolId!==schoolId)throw new Error('Cross-school profile rejected');
@@ -182,7 +206,7 @@ async function restoreVerifiedSchool(){
   if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
   verified={uid,schoolId,role:session.role,name:label.label,map:label.map};
   foregroundStatsGate.seed({schoolId,uid,now:Date.now()});
-  $('dashboardSchool').value=schoolId;lastActivity=Date.now();lock();
+  rememberVerifiedSchool(schoolId);lastActivity=Date.now();lock();
   message('पहिले प्रमाणित विद्यालयको Session पुनः जाँचियो।');void refreshStats();
  }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('विद्यालय फेरि Login गर्नुहोस्: '+neError(e))}
 }
@@ -245,9 +269,9 @@ for(const eventName of ['pointerdown','keydown'])document.addEventListener(event
 $('dashboardConnect').onclick=async()=>{if(busy||auth)return;busy=true;$('dashboardConnect').disabled=true;$('dashboardConnect').hidden=true;message('V47 मा सुरक्षित रूपमा जडान हुँदैछ…');try{
  ({auth,authSdk,db,api}=await connectSchoolFirebase());
  authSdk.onAuthStateChanged(auth,user=>{if(verified&&user?.uid!==verified.uid){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();message('Login सत्र परिवर्तन भयो। फेरि प्रमाणित गर्नुहोस्।')}});
- $('dashboardLogin').disabled=false;message('विद्यालयको IEMIS ID, इमेल र पासवर्ड राख्नुहोस्।');await restoreVerifiedSchool();
+ $('dashboardLogin').disabled=false;message($('rememberedSchool').hidden?'विद्यालयको IEMIS ID, इमेल र पासवर्ड राख्नुहोस्।':'इमेल र पासवर्ड राख्नुहोस्। विद्यालय परिवर्तन गर्न Change School थिच्नुहोस्।');await restoreVerifiedSchool();
  }catch(e){message('जडान असफल: '+neError(e));$('dashboardConnect').disabled=false;$('dashboardConnect').hidden=false}finally{busy=false}};
-$('dashboardLoginForm').onsubmit=async(event)=>{event.preventDefault();if(busy||!auth)return;busy=true;$('dashboardLogin').disabled=true;clear();try{
+$('dashboardLoginForm').onsubmit=async(event)=>{event.preventDefault();if(busy||!auth)return;busy=true;$('dashboardLogin').disabled=true;$('changeSchool').disabled=true;clear();try{
  const schoolId=validateSchoolId($('dashboardSchool').value.trim());
  const credential=await authSdk.signInWithEmailAndPassword(auth,$('dashboardEmail').value,$('dashboardPassword').value);
  $('dashboardPassword').value='';
@@ -257,9 +281,9 @@ $('dashboardLoginForm').onsubmit=async(event)=>{event.preventDefault();if(busy||
  if(auth.currentUser?.uid!==uid||school?.active!==true)throw Error('School session changed');
  const label=await verifiedSchoolLabel(schoolId,String(school.name??schoolId));
  if(auth.currentUser?.uid!==uid)throw Error('Login changed during profile load');
- verified={uid,schoolId,role:session.role,name:label.label,map:label.map};foregroundStatsGate.seed({schoolId,uid,now:Date.now()});sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
+ verified={uid,schoolId,role:session.role,name:label.label,map:label.map};foregroundStatsGate.seed({schoolId,uid,now:Date.now()});sessionStorage.setItem(SCHOOL_SELECTION_KEY,schoolId);rememberVerifiedSchool(schoolId);startVerifiedSchoolActivity();lastActivity=Date.now();lock();
  message('विद्यालय प्रमाणित भयो। साझा Session समर्थित Module मा पुनः Password आवश्यक पर्दैन।');void refreshStats();
- }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+neError(e))}finally{busy=false;$('dashboardLogin').disabled=!auth}};
+ }catch(e){sessionStorage.removeItem(SCHOOL_SELECTION_KEY);clear();try{await authSdk.signOut(auth)}catch{}message('Login असफल: '+neError(e))}finally{busy=false;$('dashboardLogin').disabled=!auth;$('changeSchool').disabled=false}};
 $('dashboardLogout').onclick=async()=>{if(busy)return;clear();sessionStorage.removeItem(SCHOOL_SELECTION_KEY);try{if(auth)await authSdk.signOut(auth);message('Logout सफल भयो।')}catch(e){message('Logout असफल: '+neError(e))}};
 $('dashboardPasswordToggle').onclick=()=>{
  const field=$('dashboardPassword'),show=field.type==='password';
