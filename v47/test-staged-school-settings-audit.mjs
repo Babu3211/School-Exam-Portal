@@ -198,3 +198,20 @@ import {iemisEntrySchema,iemisEntryValues} from './iemis-entry.js';
  const r=await summarizeMigratedReportCoverage({schoolId:sid,school:{id:sid,active:true},students,subjects,exams,marks});
  assert.equal(r.rows[0].completePreviews,1);assert.equal(JSON.stringify(r).includes('Diagnostic student'),false);
 }
+
+import {readMigratedReportCoverage} from './diagnostics/staged-school-settings-audit.mjs';
+// Test the same read-mode orchestration as the real CLI, not just its calculator.
+{
+ const registryRow={fields:{id:schoolId,active:true},updateTime:'fixture-time'};
+ const collections={students:[row('s1',{class:'1',active:true})],exams:[],marks:[],subjects:[row('english',{class:'1',name:'English',active:true,creditHour:4})]};
+ const calls=[];
+ const list=async(name,fields,cap)=>{calls.push({name,fields,cap});return collections[name]};
+ const args={schoolId,before:registryRow,registry:async()=>registryRow,list};
+ const result=await readMigratedReportCoverage(args);
+ assert.equal(result.schoolId,schoolId);assert.equal(result.rows.length,9);assert.equal(result.rows[0].students,1);
+ assert.deepEqual(calls.map(x=>x.name),['students','exams','marks','subjects']);
+ assert.deepEqual(calls[0].fields,['schoolId','class','active']);
+ await assert.rejects(readMigratedReportCoverage({...args,registry:async()=>({...registryRow,updateTime:'changed'})}),/Registry changed/);
+ await assert.rejects(readMigratedReportCoverage({...args,schoolId:'99999'}),/Active school/);
+ console.log('PASS real CLI report read-mode scope, masked roster, inventory sequence and registry recheck');
+}

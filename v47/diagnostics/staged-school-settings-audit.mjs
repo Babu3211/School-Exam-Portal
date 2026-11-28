@@ -358,6 +358,27 @@ async function operatorToken(){
  if(raw)throw Error('Use gcloud operator authentication outside CI');
  return execFileSync('gcloud',['auth','print-access-token'],{encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:30000}).trim();
 }
+export async function readMigratedReportCoverage({schoolId,list,registry,before,log=()=>{}}){
+ requireScope(schoolId);
+ if(before?.fields?.id!==schoolId||before.fields.active!==true)throw Error('Active school required for report coverage');
+  // The report adapter does not require real names or registration numbers
+  // for aggregate readiness. Do not fetch them in CI.
+  const roster=await list('students',['schoolId','class','active'],2000);
+  const students=roster.map((r,i)=>({id:r.id,fields:{...r.fields,name:'Diagnostic student '+(i+1)}}));
+  log('Target student inventory read: OK; '+students.length+' documents');
+  const exams=await list('exams',['schoolId','class','term','termKey','academicYear','active'],500);
+  log('Target exam inventory read: OK; '+exams.length+' documents');
+  const marks=await list('marks',['schoolId','class','term','termKey','academicYear','examId','studentId','subjectId','subject','scores','isAbsent','assessmentType','totalFullMarks','totalObtained'],5000);
+  log('Target marks inventory read: OK; '+marks.length+' documents');
+  // Credit is required by the exact existing report adapter; no default.
+  const reportSubjects=await list('subjects',['schoolId','class','name','active','creditHour'],1000);
+  log('Target report subject inventory read: OK; '+reportSubjects.length+' documents');
+  const after=await registry();
+  if(!before.updateTime||before.updateTime!==after.updateTime||before.fields.id!==schoolId||after.fields.id!==schoolId||after.fields.active!==true)throw Error('Registry changed during audit');
+  const result=await summarizeMigratedReportCoverage({schoolId,school:after.fields,students,subjects:reportSubjects,exams,marks});
+ return result;
+}
+
 async function main(){
  const sid=process.argv[2];requireScope(sid);
  const localReview=process.argv.length===4&&process.argv[3]==='--local-review';
@@ -390,21 +411,7 @@ async function main(){
   return out;
  };
  if(reportCoverage){
-  // The report adapter does not require real names or registration numbers
-  // for aggregate readiness. Do not fetch them in CI.
-  const roster=await list('students',['schoolId','class','active'],2000);
-  const students=roster.map((r,i)=>({id:r.id,fields:{...r.fields,name:'Diagnostic student '+(i+1)}}));
-  console.log('Target student inventory read: OK; '+students.length+' documents');
-  const exams=await list('exams',['schoolId','class','term','termKey','academicYear','active'],500);
-  console.log('Target exam inventory read: OK; '+exams.length+' documents');
-  const marks=await list('marks',['schoolId','class','term','termKey','academicYear','examId','studentId','subjectId','subject','scores','isAbsent','assessmentType','totalFullMarks','totalObtained'],5000);
-  console.log('Target marks inventory read: OK; '+marks.length+' documents');
-  // Credit is required by the exact existing report adapter; no default.
-  const reportSubjects=await list('subjects',['schoolId','class','name','active','creditHour'],1000);
-  console.log('Target report subject inventory read: OK; '+reportSubjects.length+' documents');
-  const after=await registry();
-  if(!before.updateTime||before.updateTime!==after.updateTime||after.fields.active!==true)throw Error('Registry changed during audit');
-  const result=await summarizeMigratedReportCoverage({schoolId,school:after.fields,students,subjects:reportSubjects,exams,marks});
+  const result=await readMigratedReportCoverage({schoolId:sid,list,registry,before,log:console.log});
   console.log('MIGRATED REPORT COVERAGE (aggregate only): '+JSON.stringify(result));
   console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; NOT A CONSISTENT SNAPSHOT OR LIVE IEMIS COMPARISON');
   return;
@@ -446,4 +453,4 @@ async function main(){
  }
  console.log('TARGET READ ONLY; FIREBASE WRITES: ZERO; NOT A CONSISTENT SNAPSHOT OR RELEASE APPROVAL');
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(e=>{console.error('Audit stopped: '+(typeof e?.message==='string'&&/^(?:Target read failed: HTTP [0-9]{3}|Target (?:students|exams|marks|subjects|mark_settings|members|teacher_assignments) masked document decode failed)$/.test(e.message)?e.message:['Registry changed during audit','Target registry identity mismatch','Incomplete or foreign staged inventory','Invalid IEMIS settings audit scope','Class settings audit exceeds 800 records','Unexpected class settings identity','Invalid or foreign settings identity','Invalid subject identity'].includes(e?.message)?e.message:'Invalid scope, incomplete inventory or unavailable operator access ('+(e instanceof TypeError?'TypeError':e instanceof RangeError?'RangeError':'Error')+')'));process.exitCode=1});
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(e=>{console.error('Audit stopped: '+(typeof e?.message==='string'&&/^(?:Target read failed: HTTP [0-9]{3}|Target (?:students|exams|marks|subjects|mark_settings|members|teacher_assignments) masked document decode failed)$/.test(e.message)?e.message:['Registry changed during audit','Target registry identity mismatch','Incomplete or foreign staged inventory','Invalid IEMIS settings audit scope','Class settings audit exceeds 800 records','Unexpected class settings identity','Invalid or foreign settings identity','Invalid subject identity'].includes(e?.message)?e.message:'Invalid scope, incomplete inventory or unavailable operator access ('+(e instanceof ReferenceError?'ReferenceError':e instanceof TypeError?'TypeError':e instanceof RangeError?'RangeError':'Error')+')'));process.exitCode=1});
