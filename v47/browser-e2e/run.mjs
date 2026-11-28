@@ -943,6 +943,22 @@ try{
     assert.equal(await page.locator('#password').inputValue(),'');
    }
    await report(page,school,role);assert.deepEqual(errors,[]);
+   if(role==='school_admin'){
+    await page.goto(origin+'/grade-sheet.html');
+    await page.locator('#sampleTerminal').click();
+    const sample=page.frameLocator('#sampleFrame').locator('body');
+    await sample.getByText('GRADE SHEET — SAMPLE DESIGN ONLY',{exact:true}).waitFor();
+    assert.match(await sample.textContent(),/GPA: —/);
+    assert.ok((await page.locator('#sampleFrame').getAttribute('srcdoc')).includes('@page{size:A5 portrait'));
+    await page.locator('#sampleFinal').click();
+    await wait(page,()=>document.getElementById('sampleFrame').srcdoc.includes('@page{size:A4 portrait'));
+    assert.equal(await page.locator('#printSheet').isDisabled(),true);
+    assert.equal(await page.locator('#sampleFrame').getAttribute('sandbox'),'');
+    await page.locator('#sampleClose').click();
+    assert.equal(await page.locator('#sampleFrame').getAttribute('srcdoc'),null);
+    assert.equal(await page.locator('#sampleFrame').isVisible(),false);
+    assert.deepEqual(errors,[]);
+   }
    // After report logout, returning to the dashboard must not restore any menu.
    await page.goto(origin+'/');
    await wait(page,()=>!document.getElementById('dashboardLogin').disabled);

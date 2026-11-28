@@ -113,3 +113,13 @@ console.log('PASS cached grade-sheet printing: verified roster, immutable snapsh
  assert.equal(combineTerminalGradeSheets(()=>({ready:false}),['s1','s2'],'1st').ready,false);
  console.log('PASS two terminal cards per A4 landscape: original student markup and watermark unchanged');
 }
+
+import {renderGradeSheetLayoutSample} from './iemis-grade-sheet-print-preview.mjs';
+for(const term of ['1st','final']){
+ const sample=renderGradeSheetLayoutSample(term);
+ assert.equal(sample.ready,true);assert.match(sample.html,/SAMPLE DESIGN ONLY/);assert.match(sample.html,/NOT VALID FOR OFFICIAL USE/);assert.match(sample.html,/GPA: —/);assert.match(sample.html,/Blank layout only/);assert.match(sample.html,/background-repeat:repeat/);
+ assert.ok(sample.html.includes(term==='final'?'@page{size:A4 portrait':'@page{size:A5 portrait'));
+ assert.doesNotMatch(sample.html,/GPA: [0-9]|<script/);
+}
+assert.throws(()=>renderGradeSheetLayoutSample('monthly'));
+console.log('PASS blank Terminal and Final design previews reuse the existing renderer, no marks or GPA');

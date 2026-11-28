@@ -1,4 +1,4 @@
-import {combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';
+import {combineTerminalGradeSheets,renderGradeSheetLayoutSample} from './iemis-grade-sheet-print-preview.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
@@ -15,6 +15,14 @@ const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null,configuredTable=null,configuredPage=0;
 const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 const pairSelect=$('terminalSecondStudent');
+// Separate public blank-design frame; never attach real results or print actions.
+if($('sampleFrame')){
+ const frame=$('sampleFrame'),close=$('sampleClose');
+ const showSample=term=>{frame.srcdoc=renderGradeSheetLayoutSample(term).html;frame.hidden=false;close.hidden=false;};
+ $('sampleTerminal').onclick=()=>showSample('1st');
+ $('sampleFinal').onclick=()=>showSample('final');
+ close.onclick=()=>{frame.hidden=true;frame.removeAttribute('srcdoc');close.hidden=true;};
+}
 function resetPair(){if(pairSelect){pairSelect.replaceChildren(new Option('Single Grade Sheet',''));pairSelect.disabled=true;$('terminalPairArea').hidden=true}}
 function selectedPair(){return pairSelect?.value||''}
 function sheetKey(){return JSON.stringify([$('student').value,selectedPair()])}
