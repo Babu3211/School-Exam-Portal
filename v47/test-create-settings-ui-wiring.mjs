@@ -39,3 +39,8 @@ assert.equal((js.match(/\$\('subjectId'\)\.onchange=/g)??[]).length,1);
 assert.match(js,/\$\('subjectId'\)\.onchange=\(\)=>\{optionRequest\+\+;invalidateClassMarks\(\);clearSubjectSettingsEditor\(\);lock\(false\)\}/);
 assert.match(js,/if\(collection==='subjects'\)\{invalidateClassMarks\(\);clearSubjectSettingsEditor\(\)\}/);
 assert.match(js,/function clearSubjectSettingsEditor\(\)\{clearLegacySettingsEditor\(\);\$\('newSettingsComponents'\)\.value='';/);
+
+assert.match(html,/id="legacyTermCoverage"/);
+assert.match(js,/const coverage=await Promise\.all\(terms\.map/);
+assert.match(js,/api\.getDocFromServer\(api\.doc\(db,'schools',selectedSchoolId,'mark_settings',target\.id\)\)/);
+assert.match(handler,/settings\.components\.map\(c=>c\.name\+' \/ '\+c\.fullMarks\)/);

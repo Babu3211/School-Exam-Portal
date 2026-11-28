@@ -27,7 +27,7 @@ const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
 let legacySettingsLoaded=false;
-function clearLegacySettingsEditor(){if(legacySettingsLoaded)$('newSettingsComponents').value='';legacySettingsLoaded=false;$('legacySettingsStatus').textContent='';}
+function clearLegacySettingsEditor(){if(legacySettingsLoaded)$('newSettingsComponents').value='';legacySettingsLoaded=false;$('legacySettingsStatus').textContent='';$('legacyTermCoverage').textContent='';}
 function clearSubjectSettingsEditor(){clearLegacySettingsEditor();$('newSettingsComponents').value='';for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;$('settingsCreateResult').textContent='';}
 let classMarkRoster=[],classMarkContext=null,classMarkSettings=null,rosterRequest=0,optionRequest=0,reviewPackage=null,classDraftRevision=null;
 function clearSettingsAudit(){$('exportAllTermSettingsAudit').disabled=true;$('exportEntrySettingsAudit').disabled=true;$('auditEntrySettingsRows').replaceChildren();$('auditEntrySettingsStatus').textContent='';$('auditEntrySettings').disabled=true;}
@@ -73,7 +73,7 @@ $('loadLegacySettings').onclick=async()=>{
  const group=Number(classId)<=3?'1-3':Number(classId)<=5?'4-5':Number(classId)<=8?'6-8':'9-10';
  const check=()=>{if(epoch!==attempt||optionRequest!==request||actor!==member||auth?.currentUser?.uid!==member.uid||schoolId!==selectedSchoolId||classId!==$('schoolClass').value||subjectId!==$('subjectId').value||examId!==$('term').value)throw Error('Session or selection changed')};
  const verify=async()=>{check();const session=await verifySchoolSession({schoolId:selectedSchoolId,uid:member.uid,readDocument:async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});check();if(session.role!=='school_admin')throw Error('School Admin required')};
- lock(true);$('legacySettingsStatus').textContent='पुरानो Settings जाँच हुँदैछ…';
+ lock(true);$('legacySettingsStatus').textContent='पुरानो Settings जाँच हुँदैछ…';$('legacyTermCoverage').textContent='';
  try{
   if(!await enforceSchoolIdle(auth,authSdk))throw Error('Login expired');
   await verify();
@@ -84,10 +84,18 @@ $('loadLegacySettings').onclick=async()=>{
   if(!Array.isArray(snap.docs)||snap.docs.length>200)throw Error('Legacy settings exceed class group limit');
   const records=snap.docs.map(d=>{if(d.ref?.path!==undefined&&d.ref.path!=='schools/'+selectedSchoolId+'/mark_settings/'+d.id)throw Error('Foreign legacy settings path');return {id:d.id,fields:d.data()}});
   const result=prepareLegacySettingsEditor({schoolId:selectedSchoolId,classId,subjectId,examId,subjects,records});
+  // Six bounded, server-only canonical ID checks; advisory only, never select terms or authorize writes.
+  const terms=['weekly','monthly','1st','2nd','3rd','final'];
+  const coverage=await Promise.all(terms.map(async term=>{
+   const target=prepareNewSubjectExamSettings({...result.settings,examId:term});
+   const snapshot=await api.getDocFromServer(api.doc(db,'schools',selectedSchoolId,'mark_settings',target.id));check();
+   return {term,exists:snapshot.exists()};
+  }));
   await verify();check();
   if($('newSettingsComponents').value.trim()&&!window.confirm('हाल फाराममा भएका शीर्षक र पूर्णाङ्कलाई पुरानो Settings ले बदल्ने? कुनै अभिलेख Save हुँदैन।')){ $('legacySettingsStatus').textContent='पुरानो Settings लोड रद्द भयो।';return; }
   $('newSettingsComponents').value=result.settings.components.map(c=>[c.key,c.name,c.fullMarks].join(',')).join('\n');
   legacySettingsLoaded=true;
+  $('legacyTermCoverage').textContent='Existing: '+(coverage.filter(x=>x.exists).map(x=>x.term).join(', ')||'—')+' | Missing: '+(coverage.filter(x=>!x.exists).map(x=>x.term).join(', ')||'—');
   for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;
   $('legacySettingsStatus').textContent='मूल विषय: '+result.sourceSubject+' ('+result.sourceScope+')। पुराना सुरक्षित शीर्षक र पूर्णाङ्क मात्र भरिए। Term र पूर्णाङ्क जाँचेर Create गर्नुहोस्। Final को छुट्टै Theory पूर्णाङ्क स्वतः थपिएको छैन।';
  }catch(e){if(epoch===attempt&&optionRequest===request)$('legacySettingsStatus').textContent='पुरानो Settings लोड भएन। विषय, कक्षा र पूर्णाङ्क जाँच्नुहोस्। '+neError(e)}
@@ -104,7 +112,9 @@ $('createExamSettings').onclick=async()=>{
   settings=prepareNewSubjectExamSettings({schoolId:selectedSchoolId,classId,subjectId,examId,components});
   additionalTerms=[...$('additionalSettingsTerms').querySelectorAll('input:checked')].map(option=>option.value).filter(term=>term!==examId);
   for(const term of additionalTerms)prepareNewSubjectExamSettings({...settings,examId:term});
-  if(!window.confirm('कक्षा '+classId+' / विषय '+subjectId+' / Term '+[examId,...additionalTerms].join(', ')+' मा एउटै Settings सिर्जना गर्ने? पहिल्यै कुनै Settings छ भने सबै काम रोकिन्छ।'))return;
+  const summary=settings.components.map(c=>c.name+' / '+c.fullMarks).join('\n');
+  const subjectLabel=$('subjectId').selectedOptions[0]?.textContent||subjectId;
+  if(!window.confirm('विद्यालय '+selectedSchoolId+' / कक्षा '+classId+' / विषय '+subjectLabel+' / Term '+[examId,...additionalTerms].join(', ')+' मा एउटै Settings सिर्जना गर्ने?\n'+summary+'\nपहिल्यै कुनै Settings छ भने सबै काम रोकिन्छ।'))return;
  }catch(error){output.textContent='सेटिङ अमान्य: '+neError(error);return}
  lock(true);
  try{
@@ -117,7 +127,7 @@ $('createExamSettings').onclick=async()=>{
   await revalidate();
   if(!selectedSubject.exists()||selectedSubject.data().schoolId!==selectedSchoolId||selectedSubject.data().class!==classId||selectedSubject.data().active!==true)throw new Error('Selected subject is no longer active in this class');
   const result=additionalTerms.length?await createNewSubjectExamSettings({db,api,actor,settings,additionalTerms}):await createNewSubjectExamSettings({db,api,actor,settings});
-  if(attempt===epoch){clearSettingsAudit();invalidateClassMarks();for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;output.textContent='Settings created. '+result.createdCount+' Term का सेटिङ सिर्जना भए। कक्षाको अङ्क पुनः लोड गर्नुहोस्।'}
+  if(attempt===epoch){clearSettingsAudit();invalidateClassMarks();$('legacyTermCoverage').textContent='';for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;output.textContent='Settings created. '+result.createdCount+' Term का सेटिङ सिर्जना भए। कक्षाको अङ्क पुनः लोड गर्नुहोस्।'}
  }catch(error){if(attempt===epoch)output.textContent='सेटिङ सिर्जना भएन: '+neError(error)}
  finally{if(attempt===epoch)lock(false)}
 };

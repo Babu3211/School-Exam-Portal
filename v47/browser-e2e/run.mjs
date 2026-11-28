@@ -597,12 +597,14 @@ try{
      await page.locator('#loadLegacySettings').click();
      await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('Class-specific'));
      assert.equal(await page.locator('#newSettingsComponents').inputValue(),'component_1,Assessment,137.5\ncomponent_2,Project,62.5');
+     assert.equal(await page.locator('#legacyTermCoverage').textContent(),'Existing: final | Missing: weekly, monthly, 1st, 2nd, 3rd');
      assert.equal((await db.doc(customSettingsPath).get()).exists,false);
      assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
      await page.locator('#additionalSettingsTerms input[value="monthly"]').check();
      await page.locator('#subjectId').selectOption('browser_settings_english');
      assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
      assert.equal(await page.locator('#legacySettingsStatus').textContent(),'');
+     assert.equal(await page.locator('#legacyTermCoverage').textContent(),'');
      assert.equal(await page.locator('#additionalSettingsTerms input:checked').count(),0);
      await page.locator('#loadLegacySettings').click();
      await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('पुरानो Settings लोड भएन'));
@@ -639,9 +641,10 @@ try{
     await page.locator('#loadSubjects').click();await wait(page,()=>!document.getElementById('loadSubjects').disabled&&document.getElementById('subjectId').options.length===1);
     await page.locator('#subjectId').selectOption('math');
     await page.locator('#newSettingsComponents').fill('assessment,Assessment,137.5\nproject,Project,62.5');
-    page.once('dialog',d=>d.accept());
+    let settingsConfirmation='';page.once('dialog',d=>{settingsConfirmation=d.message();return d.accept()});
     await page.locator('#createExamSettings').click();
     await wait(page,()=>document.getElementById('settingsCreateResult').textContent.includes('Settings created.'));
+    assert.match(settingsConfirmation,/Mathematics/);assert.match(settingsConfirmation,/Assessment \/ 137\.5/);assert.match(settingsConfirmation,/Project \/ 62\.5/);
     const savedSettings=(await db.doc(customSettingsPath).get()).data();
     // Real multi-term UI: an existing Final setting must abort ALL new terms.
     await page.locator('#term').selectOption('2nd');
