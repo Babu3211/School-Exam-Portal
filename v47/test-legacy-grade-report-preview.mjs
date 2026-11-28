@@ -60,8 +60,14 @@ for(const klass of ['6','7','8','9','10'])for(const exam of ['1st','2nd','final'
  assert.equal(report.summary.complete,true);assert.equal(report.previewOnly,true);
  assert.equal(report.summary.rows[0].gpa,4);
  assert.match(report.ledger.body,/<td>4\.00<\/td><\/tr>/,'Grade Ledger must display the source GPA');
- if(exam==='final')assert.match(report.printFor('s1').html,/NOT VALID FOR OFFICIAL USE/);
- else assert.equal(report.printFor('s1').ready,false,'V46 non-final GPA is intentionally unavailable');
+ const sheet=report.printFor('s1');assert.equal(sheet.ready,true);assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/);
+ assert.ok(sheet.html.includes('GPA: '+report.summary.rows[0].gpa.toFixed(2)));
+ assert.ok(sheet.html.includes(exam==='final'?'@page{size:A4 portrait':'@page{size:A5 portrait'));
+ if(exam!=='final'){
+  const pair=combineTerminalGradeSheets(report.printFor,['s1','s2'],exam);
+  assert.equal(pair.ready,true);assert.match(pair.html,/@page\{size:A4 landscape/);
+  assert.equal((pair.html.match(/NOT VALID FOR OFFICIAL USE/g)||[]).length,2);
+ }
  const alter=fn=>{const copy=structuredClone(input);fn(copy);return copy};
  for(const fn of [
   a=>a.publications.pop(),
@@ -130,7 +136,9 @@ console.log('PASS committed primary learning achievement preview: Classes 1–5,
   const expectedGpa=iemisGpa(records.map((r,i)=>{const summary=iemisSummary(r,{annual});return {summary,creditHour:catalog[i].creditHour*(!annual&&Number(klass)>=9?summary.inFull/100:1)}}),{annual,primary:!annual});
   assert.equal(result.summary.rows[0].gpa,expectedGpa);
   assert.match(result.ledger.body,new RegExp('<td>'+expectedGpa.toFixed(2)+'</td></tr>'));
-  if(!annual)assert.equal(result.printFor(roster[0].id).ready,false,'Non-final certificate preview remains disabled pending independent approval');
+  const sheet=result.printFor(roster[0].id);assert.equal(sheet.ready,true);
+  assert.ok(sheet.html.includes('GPA: '+expectedGpa.toFixed(2)),'Grade Sheet must use the identical credit-weighted V46 GPA');
+  assert.match(sheet.html,/NOT VALID FOR OFFICIAL USE/);
  }
  console.log('PASS V46 2083 credit-weighted grade ledger and export GPA parity');
 
@@ -148,7 +156,7 @@ for(const classNo of ['6','7','8','9','10'])for(const term of ['1st','2nd','fina
  const r=prepareCommittedIemisReport(input);
  assert.equal(r.summary.complete,true);assert.equal(r.summary.rows[0].subjects[0].summary.absent,true);assert.equal(r.summary.rows[0].gpa,null);assert.equal(r.summary.rows[1].gpa,4);
  assert.match(r.ledger.body,/>Abs<\/td>/);assert.match(r.ledgers.number.body,/>Abs<\/td>/);assert.match(r.ledgers.entry.body,/>Yes<\/td>/);
- assert.equal(r.printFor('s1').ready,false);if(term==='final')assert.equal(r.printFor('s2').ready,true);
+ assert.equal(r.printFor('s1').ready,false);assert.equal(r.printFor('s2').ready,true);
  for(const mode of ['number','grade'])assert.match(new TextDecoder().decode(await legacyGradePreviewExcel(r,mode).arrayBuffer()),/>Abs</);
  for(const mutation of [x=>x.publications[0].entries[0].values={},x=>x.publications[0].entries[0].totalObtained=1,x=>x.publications[0].entries.pop()]){
   const bad=structuredClone(input);mutation(bad);assert.throws(()=>prepareCommittedIemisReport(bad));
@@ -212,3 +220,5 @@ console.log('PASS scoped historical report identity; canonical terms unchanged; 
  stale=true;await assert.rejects(listScopedReportExams(input),/Stale selection/);
  console.log('PASS distinct original exam options, 2083 year, tenant and session checks');
 }
+
+import {combineTerminalGradeSheets} from './iemis-grade-sheet-print-preview.mjs';

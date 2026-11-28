@@ -91,7 +91,9 @@ export function prepareLegacyGradeReport({schoolId,school,classNo,term,examId=te
  };
  const summary=previewIemisGradeLedger({classNo,term,students,subjects,draftsBySubject,academicYear:'2083',allowAbsent:true});
  if(!summary.complete)throw Error('Incomplete V46 grade preview');
- const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject,allowAbsent:true});
+ // The same verified 2083 scope is required by the existing term-GPA
+ // projection in both the ledger and the watermarked student sheet.
+ const printFor=createIemisGradeSheetPrinter({school,classNo,term,students,subjects,draftsBySubject,academicYear:'2083',allowAbsent:true});
  return Object.freeze({schoolId,school,classNo:String(classNo),term,examId,students,subjects,rosterCount:students.length,subjectCount:subjects.length,ledger,ledgers,excelFor,summary,printFor,previewOnly:true,writeAuthorized:false,publicationAllowed:false});
 }
 export function legacyGradePreviewExcel(result,mode='grade'){
