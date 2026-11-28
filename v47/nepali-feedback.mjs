@@ -3,6 +3,8 @@ const errors={
  'auth/invalid-credential':'इमेल वा पासवर्ड मिलेन।','auth/wrong-password':'इमेल वा पासवर्ड मिलेन।','auth/user-not-found':'यो खाता दर्ता भएको छैन।','auth/invalid-email':'मान्य इमेल ठेगाना राख्नुहोस्।','auth/user-disabled':'यो खाता निष्क्रिय छ।','auth/email-already-in-use':'यो इमेल पहिल्यै दर्ता छ।','auth/too-many-requests':'धेरै प्रयास भएका छन्। केही समयपछि पुनः प्रयास गर्नुहोस्।','auth/network-request-failed':'इन्टरनेट जडान जाँचेर पुनः प्रयास गर्नुहोस्।','auth/operation-not-allowed':'यो लगइन विधि सक्षम गरिएको छैन। व्यवस्थापकलाई सम्पर्क गर्नुहोस्।','permission-denied':'यो काम गर्ने अनुमति छैन। आफ्नो विद्यालयको सदस्यता र भूमिका जाँच्नुहोस्।','unavailable':'सेवा हाल उपलब्ध छैन। पुनः प्रयास गर्नुहोस्।','resource-exhausted':'सेवाको प्रयोग सीमा पुगेको छ। व्यवस्थापकलाई सम्पर्क गर्नुहोस्।','failed-precondition':'आवश्यक पूर्वसर्त पूरा भएको छैन। व्यवस्थापकलाई सम्पर्क गर्नुहोस्।','deadline-exceeded':'अनुरोधको समयसीमा सकियो। फेरि प्रयास गर्नुहोस्।','not-found':'खोजिएको विवरण भेटिएन।','already-exists':'यो विवरण पहिल्यै दर्ता छ।','unauthenticated':'पहिले लगइन गर्नुहोस्।'
 };
 const exact={
+ 'Settings already exist. No changes made':'छानिएका Term मध्ये कुनैको सेटिङ पहिल्यै छ। कुनै नयाँ सेटिङ सिर्जना गरिएको छैन।',
+ 'Choose distinct examination terms':'फरक Term हरू मात्र छान्नुहोस्।',
  'School ID must be an IEMIS number string (5–20 digits)':'विद्यालयको IEMIS ID ५–२० अङ्कको हुनुपर्छ।',
  'Valid school name required':'विद्यालयको मान्य नाम राख्नुहोस्।',
  'School unavailable':'विद्यालय उपलब्ध छैन वा सक्रिय छैन। IEMIS ID र विद्यालयको अवस्था जाँच्नुहोस्।',

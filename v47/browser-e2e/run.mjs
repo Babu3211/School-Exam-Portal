@@ -568,6 +568,11 @@ try{
    const customSettingsPath=root+'/mark_settings/1_math_1st',customDraftPath=root+'/class_mark_drafts/1_math_1st';
    const otherSettings='schools/'+schools[1].sid+'/mark_settings/1_math_1st';
    const otherDraft='schools/'+schools[1].sid+'/class_mark_drafts/1_math_1st';
+   const extraTerms=['2nd','3rd','weekly','monthly'];
+   const extraPaths=extraTerms.map(term=>root+'/mark_settings/1_math_'+term);
+   const foreignExtra=extraTerms.map(term=>'schools/'+schools[1].sid+'/mark_settings/1_math_'+term);
+   const foreignBefore=await Promise.all(foreignExtra.map(async path=>(await db.doc(path).get()).data()));
+   for(const path of extraPaths)assert.equal((await db.doc(path).get()).exists,false);
    assert.equal((await db.doc(customSettingsPath).get()).exists,false);
    assert.equal((await db.doc(customDraftPath).get()).exists,false);
    try{
@@ -579,6 +584,37 @@ try{
     await page.locator('#createExamSettings').click();
     await wait(page,()=>document.getElementById('settingsCreateResult').textContent.includes('Settings created.'));
     const savedSettings=(await db.doc(customSettingsPath).get()).data();
+    // Real multi-term UI: an existing Final setting must abort ALL new terms.
+    await page.locator('#term').selectOption('2nd');
+    await page.locator('#additionalSettingsTerms input[value="final"]').check();
+    await page.locator('#additionalSettingsTerms input[value="weekly"]').check();
+    page.once('dialog',d=>d.accept());await page.locator('#createExamSettings').click();
+    await wait(page,()=>document.getElementById('settingsCreateResult').textContent.includes('सेटिङ सिर्जना भएन'));
+    for(const path of extraPaths)assert.equal((await db.doc(path).get()).exists,false);
+    assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
+    // Select only missing terms. All three must retain the exact custom maxima.
+    await page.locator('#additionalSettingsTerms input[value="final"]').uncheck();
+    await page.locator('#additionalSettingsTerms input[value="weekly"]').uncheck();
+    await page.locator('#additionalSettingsTerms input[value="3rd"]').check();
+    await page.locator('#additionalSettingsTerms input[value="monthly"]').check();
+    page.once('dialog',d=>d.accept());await page.locator('#createExamSettings').click();
+    await wait(page,()=>/Settings created|सेटिङ सिर्जना भएन/.test(document.getElementById('settingsCreateResult').textContent));
+    assert.match(await page.locator('#settingsCreateResult').textContent(),/Settings created\. 3 Term/);
+    for(const term of ['2nd','3rd','monthly']){
+     const cfg=(await db.doc(root+'/mark_settings/1_math_'+term).get()).data();
+     assert.deepEqual(cfg,{...savedSettings,id:'1_math_'+term,examId:term});
+    }
+    assert.equal((await db.doc(root+'/mark_settings/1_math_weekly').get()).exists,false);
+    assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
+    assert.deepEqual(await Promise.all(foreignExtra.map(async path=>(await db.doc(path).get()).data())),foreignBefore);
+    assert.equal(await page.locator('#additionalSettingsTerms input:checked').count(),0);
+    await page.locator('#term').selectOption('monthly');
+    await page.locator('#loadClassMarks').click();
+    await wait(page,()=>!document.getElementById('inspectClassMarks').disabled);
+    assert.deepEqual(await page.locator('#classMarkHeader th').allTextContents(),['Student','Absent','Assessment / 137.5','Project / 62.5']);
+    assert.equal((await db.doc(root+'/class_mark_drafts/1_math_monthly').get()).exists,false);
+    await page.locator('#term').selectOption('1st');
+    console.log('PASS atomic selected-term Settings: collision rollback, exact maxima in three new terms, Monthly entry, existing Final and second school unchanged');
     assert.deepEqual(savedSettings.components,[{key:'assessment',name:'Assessment',fullMarks:137.5},{key:'project',name:'Project',fullMarks:62.5}]);
     await page.locator('#auditEntrySettings').click();
     await wait(page,()=>document.getElementById('auditEntrySettingsStatus').textContent.includes('1 वैध सेटिङ'));
@@ -656,7 +692,7 @@ try{
      assert.deepEqual(review.errors,[]);assert.deepEqual(viewer.errors,[]);
      console.log('PASS real browser configured Mark Ledger and Entry Ledger: original maxima, 200/200, Excel, no grade sheet, role gate and stale selection reset');
     }finally{await review.context.close();await viewer.context.close()}
-   }finally{await Promise.all([customDraftPath,customSettingsPath].map(path=>db.doc(path).delete()))}
+   }finally{await Promise.all([customDraftPath,customSettingsPath,...extraPaths].map(path=>db.doc(path).delete()))}
    await page.locator('#term').selectOption('final');assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
    await page.locator('#loadSubjects').click();
    await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));

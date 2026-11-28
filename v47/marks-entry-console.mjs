@@ -59,8 +59,8 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;if(c
  status(filtered.length+' '+label+' loaded. Development preview only; mark saving is disabled.');
  }catch(e){if(request===optionRequest&&attempt===epoch&&actor){if(collection==='students'){studentsLoaded=false;loadedStudentClass=null;$('studentId').replaceChildren()}else{subjectsLoaded=false;loadedSubjectClass=null;$('subjectId').replaceChildren()}status('विवरण लोड भएन: '+neError(e))}}finally{if(request===optionRequest&&attempt===epoch)lock(false)}}
 $('loadStudents').onclick=()=>loadOptions('students',$('studentId'),'students');$('loadSubjects').onclick=()=>loadOptions('subjects',$('subjectId'),'subjects');
-$('schoolClass').onchange=()=>{optionRequest++;invalidateClassMarks();clearSettingsAudit();studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;$('studentId').replaceChildren();$('subjectId').replaceChildren();lock(false)};
-$('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>lock(false);
+$('schoolClass').onchange=()=>{for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;$('settingsCreateResult').textContent='';optionRequest++;invalidateClassMarks();clearSettingsAudit();studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;$('studentId').replaceChildren();$('subjectId').replaceChildren();lock(false)};
+$('studentId').onchange=()=>lock(false);$('subjectId').onchange=()=>{for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;$('settingsCreateResult').textContent='';lock(false)};
 $('save').onclick=()=>status('व्यक्तिगत अङ्क सुरक्षित गर्ने सुविधा बन्द छ। सम्पूर्ण कक्षाको अङ्क प्रयोग गर्नुहोस्।');
 $('createExamSettings').onclick=async()=>{
  if(busy||actor?.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value)return;
