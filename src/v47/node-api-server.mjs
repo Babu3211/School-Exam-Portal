@@ -36,7 +36,20 @@ export function createV47ApiServer({auth,firestore,publicationEnabled=false,atom
  const publish=(req,res)=>createV47NodePublicationCommitHandler({
   auth,firestore,publicationEnabled
  })(req,res);
+ // Public capability probe: no Auth or Firestore reads, no school or
+ // account information, and no claim of production readiness.
+ const status=(req,res)=>{
+  res.statusCode=req.method==="GET"?200:405;
+  res.setHeader("Content-Type","application/json; charset=utf-8");
+  res.setHeader("Cache-Control","no-store");
+  res.setHeader("X-Content-Type-Options","nosniff");
+  if(req.method!=="GET"){res.setHeader("Allow","GET");res.end(JSON.stringify({error:"Method not allowed"}));return;}
+  res.end(JSON.stringify({format:"smss-v47-runtime-status-v1",version:"V47",
+   publicationEnabled:publicationEnabled===true,atomicAttendanceEnabled:atomicAttendanceEnabled===true,
+   productionReady:false,cdcGradeApproved:false}));
+ };
  return createServer((request,response)=>{
+  if(request.url==="/api/v47/runtime-status")return status(request,response);
   const task=typeof staticHandler==='function'&&typeof request.url==='string'&&
     !request.url.startsWith('/api/')&&request.url!=='/api'
    ? staticHandler(request,response)

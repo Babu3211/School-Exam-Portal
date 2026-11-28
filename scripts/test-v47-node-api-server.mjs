@@ -31,6 +31,18 @@ try{
  await once(server,"listening");
  const base="http://127.0.0.1:"+server.address().port;
  const headers={authorization:"Bearer token","content-type":"application/json"};
+ const beforeProbe=JSON.stringify([...docs]);
+ const probe=await fetch(base+"/api/v47/runtime-status");
+ assert.equal(probe.status,200);assert.equal(probe.headers.get("cache-control"),"no-store");
+ assert.deepEqual(await probe.json(),{format:"smss-v47-runtime-status-v1",version:"V47",publicationEnabled:false,atomicAttendanceEnabled:false,productionReady:false,cdcGradeApproved:false});
+ const probePost=await fetch(base+"/api/v47/runtime-status",{method:"POST",headers,body:"{}"});
+ assert.equal(probePost.status,405);assert.equal(probePost.headers.get("allow"),"GET");
+ assert.equal(JSON.stringify([...docs]),beforeProbe);
+ const commitDisabled=await fetch(base+"/api/v47/publication/commit",{method:"POST",headers,body:"{}"});
+ assert.equal(commitDisabled.status,503);
+ const attendanceDisabled=await fetch(base+"/api/v47/attendance/atomic",{method:"POST",headers,body:"{}"});
+ assert.equal(attendanceDisabled.status,503);
+ assert.equal(JSON.stringify([...docs]),beforeProbe);
  const staging=await fetch(base+"/api/v47/publication/stage",{method:"POST",headers,body:"{}"});
  assert.equal(staging.status,503,"Disabled publication must reject staging before writes");
  const wrongMethod=await fetch(base+"/api/v47/publication/stage",{headers});
