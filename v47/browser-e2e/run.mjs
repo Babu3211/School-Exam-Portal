@@ -637,6 +637,23 @@ try{
      assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
      await page.locator('#term').selectOption('1st');
      console.log('PASS legacy Settings browser: exact precedence, duplicate refusal, fallback, term reset, tenant isolation and no writes');
+     const englishLegacy=root+'/mark_settings/browser_legacy_english',englishWeekly=root+'/mark_settings/1_browser_settings_english_weekly';
+     try{
+      await db.doc(englishLegacy).set({...legacyBase,subject:'English',className:'कक्षा १',components:[{name:'Project',fullMarks:75}]});
+      await page.locator('#term').selectOption('weekly');
+      await page.locator('#previewLegacyClass').click();await wait(page,()=>document.getElementById('legacyClassStatus').textContent.includes('2 विषय'));
+      assert.equal(await page.locator('#legacyClassRows input:checked').count(),0);
+      assert.equal((await db.doc(englishWeekly).get()).exists,false);
+      await page.locator('#legacyClassRows input[value="math"]').check();
+      await page.locator('#legacyClassRows input[value="browser_settings_english"]').check();
+      page.once('dialog',d=>d.accept());await page.locator('#createLegacyClass').click();
+      await wait(page,()=>document.getElementById('legacyClassStatus').textContent.includes('2 विषयका Settings सिर्जना भए'));
+      assert.equal((await db.doc(root+'/mark_settings/1_math_weekly').get()).data().components[0].fullMarks,50);
+      assert.equal((await db.doc(englishWeekly).get()).data().components[0].fullMarks,75);
+      assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
+      assert.deepEqual((await db.doc(foreignLegacyPath).get()).data(),foreignLegacy);
+     }finally{await Promise.all([englishLegacy,englishWeekly,root+'/mark_settings/1_math_weekly'].map(p=>db.doc(p).delete()))}
+     await page.locator('#term').selectOption('1st');
     }finally{await Promise.all([legacyGroupPath,legacyExactPath,legacyDupPath,foreignLegacyPath,otherSubjectPath].map(p=>db.doc(p).delete()))}
     await page.locator('#loadSubjects').click();await wait(page,()=>!document.getElementById('loadSubjects').disabled&&document.getElementById('subjectId').options.length===1);
     await page.locator('#subjectId').selectOption('math');

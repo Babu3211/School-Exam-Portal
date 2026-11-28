@@ -69,3 +69,21 @@ console.log('V47 create-once subject examination settings contract tests passed 
  await assert.rejects(createNewSubjectExamSettings({db:{},api:multiApi,actor:{...actor,role:'teacher'},settings:third,additionalTerms:['weekly']}),/School Admin/);
  assert.equal(written.length,3);
 }
+
+{
+ const other=prepareNewSubjectExamSettings({...settings,subjectId:'math',components:[{key:'project',name:'Project',fullMarks:137.5}]});
+ const docs=new Map(),writes=[];
+ const batchApi={doc:(_db,...parts)=>parts.join('/'),runTransaction:async(_db,cb)=>{
+  const pending=[];await cb({get:async path=>{assert.equal(pending.length,0);if(path.includes('/subjects/'))return {exists:()=>true,data:()=>({schoolId:'12345',class:'9',active:true})};return {exists:()=>docs.has(path)}},set:(p,d)=>pending.push([p,d])});
+  for(const [p,d] of pending){docs.set(p,d);writes.push(p)}
+ }};
+ const result=await createNewSubjectExamSettings({db:{},api:batchApi,actor,settings,additionalSubjects:[other]});
+ assert.equal(result.createdCount,2);assert.equal(docs.get('schools/12345/mark_settings/9_math_final').components[0].fullMarks,137.5);
+ const weekly=prepareNewSubjectExamSettings({...settings,examId:'weekly'});
+ await assert.rejects(createNewSubjectExamSettings({db:{},api:batchApi,actor,settings:weekly,additionalSubjects:[other]}),/scope mismatch/);
+ await assert.rejects(createNewSubjectExamSettings({db:{},api:batchApi,actor,settings,additionalSubjects:[settings]}),/Duplicate batch/);
+ const newSubject=prepareNewSubjectExamSettings({...settings,subjectId:'english'});
+ await assert.rejects(createNewSubjectExamSettings({db:{},api:batchApi,actor,settings:newSubject,additionalSubjects:[other]}),/already exist/);
+ assert.equal(writes.length,2);
+}
+console.log('PASS selected class Settings batch: original maxima, one-term scope and atomic no-overwrite');

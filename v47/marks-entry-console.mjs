@@ -26,13 +26,15 @@ import {verifyClassMarksReviewPackage} from './verify-class-marks-review-package
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
 const $=id=>document.getElementById(id),status=msg=>{$('message').textContent=msg};
 let auth,authSdk,api,db,actor,schoolId,epoch=0,busy=false,studentsLoaded=false,subjectsLoaded=false,loadedStudentClass=null,loadedSubjectClass=null;
-let legacySettingsLoaded=false;
+let legacySettingsLoaded=false,legacyClassPreview=null;
+function clearLegacyClass(){legacyClassPreview=null;$('legacyClassRows').replaceChildren();$('legacyClassStatus').textContent='';$('createLegacyClass').disabled=true;}
+function selectedLegacyRows(){return [...$('legacyClassRows').querySelectorAll('input:checked')].map(node=>legacyClassPreview?.find(r=>r.subjectId===node.value&&r.status==='Ready')).filter(Boolean)}
 function clearLegacySettingsEditor(){if(legacySettingsLoaded)$('newSettingsComponents').value='';legacySettingsLoaded=false;$('legacySettingsStatus').textContent='';$('legacyTermCoverage').textContent='';}
-function clearSubjectSettingsEditor(){clearLegacySettingsEditor();$('newSettingsComponents').value='';for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;$('settingsCreateResult').textContent='';}
+function clearSubjectSettingsEditor(){clearLegacySettingsEditor();clearLegacyClass();$('newSettingsComponents').value='';for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;$('settingsCreateResult').textContent='';}
 let classMarkRoster=[],classMarkContext=null,classMarkSettings=null,rosterRequest=0,optionRequest=0,reviewPackage=null,classDraftRevision=null;
 function clearSettingsAudit(){$('exportAllTermSettingsAudit').disabled=true;$('exportEntrySettingsAudit').disabled=true;$('auditEntrySettingsRows').replaceChildren();$('auditEntrySettingsStatus').textContent='';$('auditEntrySettings').disabled=true;}
 function reset(){clearSettingsAudit();clearSubjectSettingsEditor();$('loadLegacySettings').disabled=true;$('serverReviewMarks').disabled=true;$('serverPublicationStatus').textContent='';$('saveClassDraft').disabled=true;$('classDraftStatus').textContent='';classDraftRevision=null;$('importClassExcelFile').value='';$('importClassExcelFile').disabled=true;$('importClassExcel').disabled=true;$('downloadClassTemplateExcel').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;$('createExamSettings').disabled=true;for(const option of $('additionalSettingsTerms').querySelectorAll('input')){option.checked=false;option.disabled=true;}$('settingsCreateResult').textContent='';$('iemisSchemaRows').replaceChildren();$('iemisSchemaStatus').textContent='';optionRequest++;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=true;$('draftCheckResult').textContent='';$('loadClassMarks').disabled=true;epoch++;studentsLoaded=false;subjectsLoaded=false;loadedStudentClass=null;loadedSubjectClass=null;actor=null;schoolId=null;$('work').hidden=true;$('logout').disabled=true;$('save').disabled=true;$('studentId').replaceChildren();$('subjectId').replaceChildren();}
-function lock(value){busy=value;const auditDisabled=value||actor?.role!=='school_admin'||!/^(?:ECD|LKG|UKG|[1-9]|1[012])$/.test($('schoolClass').value)||!['1st','2nd','3rd','final'].includes($('term').value);$('auditEntrySettings').disabled=auditDisabled;$('exportEntrySettingsAudit').disabled=auditDisabled;$('exportAllTermSettingsAudit').disabled=value||actor?.role!=='school_admin'||!/^(?:ECD|LKG|UKG|[1-9]|1[012])$/.test($('schoolClass').value);$('serverReviewMarks').disabled=value||actor?.role!=='school_admin'||!classMarkContext||!Number.isSafeInteger(classDraftRevision)||classDraftRevision<1;$('newSettingsComponents').disabled=value||actor?.role!=='school_admin';for(const option of $('additionalSettingsTerms').querySelectorAll('input')){option.disabled=value||actor?.role!=='school_admin'||option.value===$('term').value;if(option.value===$('term').value)option.checked=false;}$('saveClassDraft').disabled=value||!reviewPackage||classDraftRevision===null||actor?.role!=='school_admin';$('importClassExcelFile').disabled=value||!classMarkContext;$('importClassExcel').disabled=value||!classMarkContext||!$('importClassExcelFile').files?.length;$('downloadClassTemplateExcel').disabled=value||!classMarkContext||!classMarkRoster.length;$('downloadClassReview').disabled=value||!reviewPackage;$('downloadClassReviewExcel').disabled=value||!reviewPackage;$('reviewFile').disabled=value||!classMarkContext;$('verifyClassReview').disabled=value||!classMarkContext||!$('reviewFile').files?.length;$('createExamSettings').disabled=value||!actor||actor.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value;$('loadLegacySettings').disabled=$('createExamSettings').disabled||!/^(?:[1-9]|10)$/.test($('schoolClass').value);for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value||(input.matches('input[data-field]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor)||(['theory','practical'].includes(id)&&actor?.role!=='school_admin');if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
+function lock(value){busy=value;const auditDisabled=value||actor?.role!=='school_admin'||!/^(?:ECD|LKG|UKG|[1-9]|1[012])$/.test($('schoolClass').value)||!['1st','2nd','3rd','final'].includes($('term').value);$('auditEntrySettings').disabled=auditDisabled;$('exportEntrySettingsAudit').disabled=auditDisabled;$('exportAllTermSettingsAudit').disabled=value||actor?.role!=='school_admin'||!/^(?:ECD|LKG|UKG|[1-9]|1[012])$/.test($('schoolClass').value);$('serverReviewMarks').disabled=value||actor?.role!=='school_admin'||!classMarkContext||!Number.isSafeInteger(classDraftRevision)||classDraftRevision<1;$('newSettingsComponents').disabled=value||actor?.role!=='school_admin';for(const option of $('additionalSettingsTerms').querySelectorAll('input')){option.disabled=value||actor?.role!=='school_admin'||option.value===$('term').value;if(option.value===$('term').value)option.checked=false;}$('saveClassDraft').disabled=value||!reviewPackage||classDraftRevision===null||actor?.role!=='school_admin';$('importClassExcelFile').disabled=value||!classMarkContext;$('importClassExcel').disabled=value||!classMarkContext||!$('importClassExcelFile').files?.length;$('downloadClassTemplateExcel').disabled=value||!classMarkContext||!classMarkRoster.length;$('downloadClassReview').disabled=value||!reviewPackage;$('downloadClassReviewExcel').disabled=value||!reviewPackage;$('reviewFile').disabled=value||!classMarkContext;$('verifyClassReview').disabled=value||!classMarkContext||!$('reviewFile').files?.length;$('createExamSettings').disabled=value||!actor||actor.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value;$('loadLegacySettings').disabled=$('createExamSettings').disabled||!/^(?:[1-9]|10)$/.test($('schoolClass').value);$('previewLegacyClass').disabled=value||actor?.role!=='school_admin'||!/^(?:[1-9]|10)$/.test($('schoolClass').value);for(const input of $('legacyClassRows').querySelectorAll('input'))input.disabled=value;const n=selectedLegacyRows().length;$('createLegacyClass').disabled=value||actor?.role!=='school_admin'||n<1||n>5;for(const input of $('classMarkRows').querySelectorAll('input'))input.disabled=value||(input.matches('input[data-field]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);$('loadClassMarks').disabled=value||!actor||actor.role!=='school_admin';$('saveClassMarks').disabled=true;$('inspectClassMarks').disabled=value||!actor||!classMarkContext;for(const id of ['login','logout','loadStudents','loadSubjects','save','schoolClass','term','subjectId','studentId','theory','practical'])$(id).disabled=value||(['loadStudents','loadSubjects','save'].includes(id)&&!actor)||(['theory','practical'].includes(id)&&actor?.role!=='school_admin');if(!value){$('login').disabled=!auth;$('logout').disabled=!actor;$('save').disabled=true;}}
 $('connect').onclick=async()=>{try{({auth,authSdk,db,api}=await connectSchoolFirebase());authSdk.onAuthStateChanged(auth,user=>{if(actor&&user?.uid!==actor.uid){reset();status('प्रयोगकर्ता सत्र परिवर्तन भयो। अंक समीक्षा फेरि सुरु गर्न लगइन गर्नुहोस्।')}});$('connect').disabled=true;$('login').disabled=false;if(requestedSchool){$('schoolId').value=validateSchoolId(requestedSchool);if(auth.currentUser)queueMicrotask(()=>$('login').click())}status('V47 मा जडान भयो।')}catch(e){status('जडान असफल: '+neError(e))}};
 $('login').onclick=async()=>{if(busy)return;reset();const attempt=epoch;const loginAuth=auth;lock(true);try{const id=validateSchoolId($('schoolId').value.trim());const freshSignIn=!auth.currentUser;const credential=freshSignIn?await authSdk.signInWithEmailAndPassword(auth,$('email').value,$('password').value):{user:auth.currentUser};$('password').value='';if(attempt!==epoch){if(loginAuth.currentUser?.uid===credential.user.uid)await authSdk.signOut(loginAuth);return}const uid=credential.user.uid;const session=await verifySchoolSession({schoolId:id,uid,readDocument:async path=>{const snap=await api.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null;}});if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid)throw new Error('School session changed');const school=await api.getDoc(api.doc(db,'schools',id));if(attempt!==epoch){if(loginAuth.currentUser?.uid===uid)await authSdk.signOut(loginAuth);return}if(loginAuth.currentUser?.uid!==uid||!school.exists()||school.data().active!==true)throw new Error('School inactive');actor={role:session.role,active:true,schoolId:id,uid};if(freshSignIn)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}schoolId=id;$('heading').textContent='Raw mark — '+String(school.data().name??id);$('work').hidden=false;
  const readOnly=session.role!=='school_admin';
@@ -127,14 +129,78 @@ $('createExamSettings').onclick=async()=>{
   await revalidate();
   if(!selectedSubject.exists()||selectedSubject.data().schoolId!==selectedSchoolId||selectedSubject.data().class!==classId||selectedSubject.data().active!==true)throw new Error('Selected subject is no longer active in this class');
   const result=additionalTerms.length?await createNewSubjectExamSettings({db,api,actor,settings,additionalTerms}):await createNewSubjectExamSettings({db,api,actor,settings});
-  if(attempt===epoch){clearSettingsAudit();invalidateClassMarks();$('legacyTermCoverage').textContent='';for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;output.textContent='Settings created. '+result.createdCount+' Term का सेटिङ सिर्जना भए। कक्षाको अङ्क पुनः लोड गर्नुहोस्।'}
+  if(attempt===epoch){clearSettingsAudit();invalidateClassMarks();clearLegacyClass();$('legacyTermCoverage').textContent='';for(const option of $('additionalSettingsTerms').querySelectorAll('input'))option.checked=false;output.textContent='Settings created. '+result.createdCount+' Term का सेटिङ सिर्जना भए। कक्षाको अङ्क पुनः लोड गर्नुहोस्।'}
  }catch(error){if(attempt===epoch)output.textContent='सेटिङ सिर्जना भएन: '+neError(error)}
+ finally{if(attempt===epoch)lock(false)}
+};
+
+async function readLegacyClassPreview(){
+ const member=actor,attempt=epoch,request=optionRequest,selectedSchoolId=schoolId,classId=$('schoolClass').value,examId=$('term').value;
+ const check=()=>{if(!member||member.role!=='school_admin'||epoch!==attempt||optionRequest!==request||actor!==member||auth?.currentUser?.uid!==member.uid||schoolId!==selectedSchoolId||classId!==$('schoolClass').value||examId!==$('term').value)throw Error('Session or selection changed')};
+ const verify=async()=>{check();const session=await verifySchoolSession({schoolId:selectedSchoolId,uid:member.uid,readDocument:async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return snap.exists()?snap.data():null}});check();if(session.role!=='school_admin')throw Error('School Admin required')};
+ if(!/^(?:[1-9]|10)$/.test(classId)||!await enforceSchoolIdle(auth,authSdk))throw Error('Unsupported class or expired login');
+ await verify();
+ const subjects=await readSchoolSubjectCatalog({db,api,actor:member,schoolId:selectedSchoolId,schoolClass:classId,assertCurrent:check});
+ const group=Number(classId)<=3?'1-3':Number(classId)<=5?'4-5':Number(classId)<=8?'6-8':'9-10';
+ const collection=api.collection(db,'schools',selectedSchoolId,'mark_settings');
+ const [legacy,canonical]=await Promise.all([
+  api.getDocsFromServer(api.query(collection,api.where('classGroup','==',group),api.limit(201))),
+  api.getDocsFromServer(api.query(collection,api.where('classId','==',classId),api.where('examId','==',examId),api.limit(201)))
+ ]);check();
+ const unpack=snap=>{
+  if(!Array.isArray(snap.docs)||snap.docs.length>200)throw Error('Incomplete settings inventory');
+  return snap.docs.map(d=>{const fields=d.data();if(fields.schoolId!==selectedSchoolId||d.ref?.path!==undefined&&d.ref.path!=='schools/'+selectedSchoolId+'/mark_settings/'+d.id)throw Error('Foreign settings record');return {id:d.id,fields}});
+ };
+ const records=unpack(legacy),existing=unpack(canonical);
+ const rows=[];
+ for(const subject of subjects.filter(x=>x.active===true)){
+  check();const row={subjectId:subject.id,subject:subject.name,status:'Review required',source:'',settings:null};
+  if(existing.some(r=>r.fields.subjectId===subject.id||r.id===classId+'_'+subject.id+'_'+examId)){row.status='Existing — protected';rows.push(row);continue}
+  let candidate;
+  try{candidate=prepareLegacySettingsEditor({schoolId:selectedSchoolId,classId,subjectId:subject.id,examId,subjects,records})}catch{rows.push(row);continue}
+  const snap=await api.getDocFromServer(api.doc(db,'schools',selectedSchoolId,'mark_settings',candidate.settings.id));check();
+  if(snap.exists()){row.status='Existing — protected';rows.push(row);continue}
+  rows.push({...row,status:'Ready',source:candidate.sourceSubject+' ('+candidate.sourceScope+')',sourceId:candidate.sourceId,settings:candidate.settings});
+ }
+ await verify();check();return rows;
+}
+$('previewLegacyClass').onclick=async()=>{
+ if(busy||actor?.role!=='school_admin')return;
+ const attempt=epoch;clearLegacyClass();lock(true);$('legacyClassStatus').textContent='कक्षाका Settings जाँच हुँदैछन्…';
+ try{
+  const rows=await readLegacyClassPreview();if(attempt!==epoch)return;
+  legacyClassPreview=rows;
+  for(const row of rows){
+   const tr=document.createElement('tr'),select=document.createElement('td');
+   if(row.status==='Ready'){const input=document.createElement('input');input.type='checkbox';input.value=row.subjectId;input.setAttribute('aria-label',row.subject);input.onchange=()=>lock(false);select.append(input)}
+   tr.append(select);
+   for(const value of [row.subject,row.status,row.settings?row.source+' — '+row.settings.components.map(c=>c.name+' / '+c.fullMarks).join(' | '):'—']){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+   $('legacyClassRows').append(tr);
+  }
+  $('legacyClassStatus').textContent=rows.filter(x=>x.status==='Ready').length+' विषय समीक्षा र सिर्जनाका लागि उपलब्ध छन्। स्वतः कुनै Settings सुरक्षित हुँदैन।';
+ }catch(e){if(attempt===epoch)$('legacyClassStatus').textContent='कक्षाका Settings उपलब्ध भएनन्: '+neError(e)}
+ finally{if(attempt===epoch)lock(false)}
+};
+$('createLegacyClass').onclick=async()=>{
+ if(busy||actor?.role!=='school_admin')return;
+ const rows=selectedLegacyRows();if(rows.length<1||rows.length>5)return;
+ const attempt=epoch,member=actor;
+ const description=rows.map(r=>r.subject+' — '+r.settings.components.map(c=>c.name+' / '+c.fullMarks).join(' | ')).join('\n');
+ if(!window.confirm('विद्यालय '+schoolId+' / कक्षा '+$('schoolClass').value+' / Term '+$('term').value+' का छानिएका विषय सिर्जना गर्ने?\n'+description+'\nपुरानो Settings परिवर्तन हुँदैन।'))return;
+ lock(true);
+ try{
+  const fresh=await readLegacyClassPreview();
+  if(attempt!==epoch||actor!==member)throw Error('Session changed');
+  for(const row of rows){const now=fresh.find(r=>r.subjectId===row.subjectId);if(!now||now.status!=='Ready'||now.sourceId!==row.sourceId||JSON.stringify(now.settings)!==JSON.stringify(row.settings))throw Error('Settings or source changed; review again')}
+  const result=await createNewSubjectExamSettings({db,api,actor:member,settings:rows[0].settings,additionalSubjects:rows.slice(1).map(r=>r.settings)});
+  if(attempt===epoch){clearLegacyClass();clearSettingsAudit();invalidateClassMarks();clearLegacySettingsEditor();$('legacyClassStatus').textContent=result.createdCount+' विषयका Settings सिर्जना भए।'}
+ }catch(e){if(attempt===epoch){clearLegacyClass();$('legacyClassStatus').textContent='सेटिङ सिर्जना भएन। पुनः समीक्षा गर्नुहोस्: '+neError(e)}}
  finally{if(attempt===epoch)lock(false)}
 };
 
 
 function invalidateClassMarks(){$('serverReviewMarks').disabled=true;$('serverPublicationStatus').textContent='';$('saveClassDraft').disabled=true;$('classDraftStatus').textContent='';classDraftRevision=null;$('importClassExcelFile').value='';$('importClassExcelFile').disabled=true;$('importClassExcel').disabled=true;$('downloadClassTemplateExcel').disabled=true;$('reviewFile').value='';$('reviewFile').disabled=true;$('verifyClassReview').disabled=true;$('reviewVerifyResult').textContent='';reviewPackage=null;$('downloadClassReview').disabled=true;$('downloadClassReviewExcel').disabled=true;rosterRequest++;classMarkRoster=[];classMarkContext=null;classMarkSettings=null;$('classMarkRows').replaceChildren();$('classMarkHeader').replaceChildren();$('classMarkCount').textContent='';$('draftCheckResult').textContent='';$('inspectClassMarks').disabled=true;$('saveClassMarks').disabled=true}
-$('term').onchange=()=>{clearSettingsAudit();invalidateClassMarks();clearLegacySettingsEditor();lock(false)};
+$('term').onchange=()=>{clearSettingsAudit();invalidateClassMarks();clearLegacySettingsEditor();clearLegacyClass();lock(false)};
 $('subjectId').onchange=()=>{optionRequest++;invalidateClassMarks();clearSubjectSettingsEditor();lock(false)};
 $('loadClassMarks').onclick=async()=>{
  if(busy||actor?.role!=='school_admin'||!subjectsLoaded||loadedSubjectClass!==$('schoolClass').value||!$('subjectId').value){status('पहिले सक्रिय कक्षाका विषय लोड गर्नुहोस्।');return}
