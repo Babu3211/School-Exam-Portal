@@ -81,6 +81,8 @@ jobs:
         env:
           V47_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SMSS_EXAM_PORTAL_V47 }}
         run: |
+          # Never deploy a superseded preview while newer V47 work exists.
+          test "$(git ls-remote origin refs/heads/smss-v47-multischool-work | cut -f1)" = "$GITHUB_SHA"
           umask 077
           credential_file="$(mktemp "$RUNNER_TEMP/v47-credentials.XXXXXX")"
           trap 'rm -f "$credential_file"' EXIT
@@ -88,4 +90,5 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="$credential_file"
           unset V47_SERVICE_ACCOUNT
           npx --yes firebase-tools@14.21.0 hosting:channel:deploy v47-test --project smss-exam-portal-v47 --config v47/firebase.json --expires 7d --non-interactive
+          echo "Reviewed preview source: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo 'V47 preview only; no production Hosting channel, rules, database migration, billing change or V46 deployment.' >> "$GITHUB_STEP_SUMMARY"
