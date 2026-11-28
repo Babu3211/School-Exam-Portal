@@ -579,6 +579,43 @@ try{
     await page.locator('#loadSubjects').click();
     await wait(page,()=>Array.from(document.getElementById('subjectId').options).some(o=>o.value==='math'));
     await page.locator('#subjectId').selectOption('math');
+    // Verify the existing V46 Settings loader through real browser + emulator.
+    // Legacy rows are fixtures only; loading must not create a V47 setting.
+    const legacyBase={schoolId:sid,classGroup:'1-3',subject:'Mathematics'};
+    const legacyGroupPath=root+'/mark_settings/browser_legacy_group';
+    const legacyExactPath=root+'/mark_settings/browser_legacy_exact';
+    const legacyDupPath=root+'/mark_settings/browser_legacy_duplicate';
+    const foreignLegacyPath='schools/'+schools[1].sid+'/mark_settings/browser_legacy_exact';
+    const groupLegacy={...legacyBase,components:[{name:'Assessment',fullMarks:50}]};
+    const exactLegacy={...legacyBase,className:'1',components:[{name:'Assessment',fullMarks:137.5},{name:'Project',fullMarks:62.5}]};
+    const foreignLegacy={...exactLegacy,schoolId:schools[1].sid,components:[{name:'Assessment',fullMarks:999}]};
+    try{
+     await Promise.all([[legacyGroupPath,groupLegacy],[legacyExactPath,exactLegacy],[foreignLegacyPath,foreignLegacy]].map(([p,v])=>db.doc(p).set(v)));
+     await page.locator('#loadLegacySettings').click();
+     await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('Class-specific'));
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'component_1,Assessment,137.5\ncomponent_2,Project,62.5');
+     assert.equal((await db.doc(customSettingsPath).get()).exists,false);
+     assert.deepEqual((await db.doc(settingPath).get()).data(),settingBefore);
+     await page.locator('#term').selectOption('2nd');
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
+     await page.locator('#term').selectOption('1st');
+     await db.doc(legacyDupPath).set(exactLegacy);
+     await page.locator('#loadLegacySettings').click();
+     await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('पुरानो Settings लोड भएन'));
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
+     await db.doc(legacyDupPath).delete();
+     await db.doc(legacyExactPath).delete();
+     await page.locator('#loadLegacySettings').click();
+     await wait(page,()=>document.getElementById('legacySettingsStatus').textContent.includes('Group fallback'));
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'component_1,Assessment,50');
+     assert.equal((await db.doc(customSettingsPath).get()).exists,false);
+     assert.deepEqual((await db.doc(legacyGroupPath).get()).data(),groupLegacy);
+     assert.deepEqual((await db.doc(foreignLegacyPath).get()).data(),foreignLegacy);
+     await page.locator('#term').selectOption('2nd');
+     assert.equal(await page.locator('#newSettingsComponents').inputValue(),'');
+     await page.locator('#term').selectOption('1st');
+     console.log('PASS legacy Settings browser: exact precedence, duplicate refusal, fallback, term reset, tenant isolation and no writes');
+    }finally{await Promise.all([legacyGroupPath,legacyExactPath,legacyDupPath,foreignLegacyPath].map(p=>db.doc(p).delete()))}
     await page.locator('#newSettingsComponents').fill('assessment,Assessment,137.5\nproject,Project,62.5');
     page.once('dialog',d=>d.accept());
     await page.locator('#createExamSettings').click();
