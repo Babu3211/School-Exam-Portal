@@ -2,7 +2,7 @@
 Reuse the existing V46 role planner. No new accounts, assignments, deletions,
 source writes or academic writes. A mismatched account is held as a whole.
 """
-import os, sys, json, hashlib, subprocess, importlib.util
+import os, sys, json, hashlib, subprocess, importlib.util, re
 from pathlib import Path
 from collections import Counter
 import requests
@@ -46,6 +46,25 @@ def select_changes(expected,members,assignments):
             counts["activate_memberships" if key==n else "activate_assignments"]+=1
             writes.append({"update":{"name":key,"fields":{"active":{"booleanValue":True}}},"updateMask":{"fieldPaths":["active"]},"currentDocument":{"updateTime":x["updateTime"]}})
     return writes,dict(counts)
+def api_error_summary(project,url,status,payload):
+    # Never print API messages, URLs with identifiers, tokens or response bodies.
+    if url.startswith(RB):service="Rules metadata"
+    elif url.startswith("https://identitytoolkit.googleapis.com/"):service="Auth inventory"
+    elif url.endswith(":commit"):service="Firestore commit"
+    elif url==FS+BASE:service="Firestore school registry"
+    else:
+        collection=url.rsplit("/",1)[-1]
+        service="Firestore "+collection if collection in ("members","subjects","teacher_assignments","user_roles","v47_super_admins") else "Firestore inventory"
+    error=payload.get("error",{}) if isinstance(payload,dict) else {}
+    if not isinstance(error,dict):error={}
+    def safe(v):return v if isinstance(v,str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,100}",v) else ""
+    codes=[safe(error.get("status"))]
+    for detail in error.get("details",[]) if isinstance(error.get("details",[]),list) else []:
+        if isinstance(detail,dict):codes.append(safe(detail.get("reason")))
+    for item in error.get("errors",[]) if isinstance(error.get("errors",[]),list) else []:
+        if isinstance(item,dict):codes.append(safe(item.get("reason")))
+    suffix=" ".join(dict.fromkeys(x for x in codes if x))
+    return f"{'V46' if project==SOURCE else 'V47'} {service}: HTTP {status}"+(" ("+suffix+")" if suffix else "")
 def self_test():
     u="teacher123";n=BASE+"/members/"+u;a=BASE+"/teacher_assignments/"+SID+":"+u+":6:math"
     s=lambda v:{"stringValue":v}
@@ -59,7 +78,10 @@ def self_test():
     assert not select_changes(exp,{n:doc(f)},{})[0]
     assert not select_changes({}, {n:doc(f)},{a:doc(af)})[0]
     assert not select_changes(exp,{n:doc(dict(f,role=s("viewer")))},{a:doc(af)})[0]
-    print("PASS exact staged roles and duties, missing/mismatched held, active-only writes")
+    msg=api_error_summary(SOURCE,"https://identitytoolkit.googleapis.com/v1/projects/"+SOURCE+"/accounts:batchGet",429,{"error":{"status":"RESOURCE_EXHAUSTED","message":"private data","details":[{"reason":"RATE_LIMIT_EXCEEDED"}]}})
+    assert msg=="V46 Auth inventory: HTTP 429 (RESOURCE_EXHAUSTED RATE_LIMIT_EXCEEDED)" and "private" not in msg
+    assert api_error_summary(TARGET,FS+BASE,429,{})=="V47 Firestore school registry: HTTP 429"
+    print("PASS exact staged roles and duties, missing/mismatched held, active-only writes and sanitized API diagnostics")
 def main():
     if sys.argv[1:]==["--self-test"]:return self_test()
     if sys.argv[1:] not in (["--review"],["--apply"]):raise ValueError("Choose review or apply")
@@ -72,7 +94,10 @@ def main():
     def call(p,url,body=None,params=None):
         if p not in (SOURCE,TARGET) or (body is not None and (p!=TARGET or url!=FS+root(TARGET)+":commit")):raise ValueError("Unauthorized endpoint")
         r=session.request("GET" if body is None else "POST",url,params=params,json=body,headers={"Authorization":"Bearer "+token,"x-goog-user-project":p},timeout=(10,60),allow_redirects=False)
-        if r.status_code!=200:raise RuntimeError("API HTTP "+str(r.status_code))
+        if r.status_code!=200:
+            try:payload=r.json()
+            except ValueError:payload={}
+            raise RuntimeError(api_error_summary(p,url,r.status_code,payload))
         return r.json()
     def docs(p,relative,cap):
         prefix=root(p)+"/"+relative
@@ -132,9 +157,9 @@ def main():
             if out:expected[uid]=out
         w,c=select_changes(expected,members,assignments)
         return w,c
-    w,c=snapshot()
     ok=rules_match()
-    print("LIVE RULES MATCH REVIEWED V47:",ok)
+    print("LIVE RULES MATCH REVIEWED V47:",ok,flush=True)
+    w,c=snapshot()
     print("EXISTING ROLE REVIEW:",json.dumps(c,sort_keys=True))
     if sys.argv[1]=="--review":return
     if not ok:raise ValueError("Deployed rules differ; activation blocked")
