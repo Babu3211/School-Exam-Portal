@@ -481,8 +481,11 @@ try {
   await assertFails(setDoc(cdc('admin-invalid-level',adminCdcDb),{...observation,level:5,createdBy:ADMIN}));
   await assertFails(setDoc(cdc('admin-wrong-section',adminCdcDb),{...observation,section:'B',createdBy:ADMIN}));
   await assertFails(setDoc(cdc('admin-spoof',adminCdcDb),observation));
-  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{level:4}));
-  await assertFails(deleteDoc(cdc('admin-create',adminCdcDb)));
+  await assertSucceeds(updateDoc(cdc('admin-create',adminCdcDb),{level:4}));
+  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{level:5}));
+  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{className:'4'}));
+  await assertFails(updateDoc(cdc('admin-create',adminCdcDb),{createdBy:'other'}));
+  await assertSucceeds(deleteDoc(cdc('admin-create',adminCdcDb)));
   await assertFails(getDoc(cdc('valid',testEnv.unauthenticatedContext().firestore())));
   // Binary indicator evidence is separate from the established 1–4 level records.
   const seroUid='cdc-sero-assigned',seroViewer='cdc-sero-viewer',seroSubject='हाम्रो सेरोफेरो';
@@ -527,14 +530,14 @@ try {
     wrongGradeId:{outcomeId:'cdc2076-g2-1'},
     outOfBounds:{outcomeId:'cdc2076-g1-99'},
     wrongThemeId:{outcomeId:'cdc2076-g1-6'},
-    reviewOnlyTheme:{unit:'हाम्रो वातावरण',outcomeId:'cdc2076-g1-18'},
+    wrongEnvironmentId:{unit:'हाम्रो वातावरण',outcomeId:'cdc2076-g1-12'},
     mismatchedTheme:{unit:'हाम्रो समुदाय',outcomeId:'cdc2076-g1-1'}
   })) await assertFails(setDoc(seroRef(id),{...seroData,...patch}));
-  // Legitimate IDs at the boundaries of all three enabled themes.
+  // Legitimate IDs at the boundaries of the original three enabled themes.
   for(const [unit,ids] of [['म र मेरो परिवार',[1,5]],['मेरो दैनिक जीवन',[6,9]],['हाम्रो समुदाय',[10,12]]]){
     for(const n of ids)await assertSucceeds(setDoc(seroRef('valid-boundary-'+n),{...seroData,unit,outcomeId:'cdc2076-g1-'+n}));
   }
-  // Assigned Class 2/3 teachers cannot bypass the draft source approval gate.
+  // Assigned Class 2/3 teachers can write only their own source-reviewed class/theme blocks.
   await testEnv.withSecurityRulesDisabled(async context=>{
     const d=context.firestore();
     await setDoc(doc(d,'user_roles',seroUid),{active:true,roles:['subject_teacher'],
@@ -542,8 +545,11 @@ try {
       subjectAssignmentSectionKeys:[1,2,3].map(g=>g+'::'+seroSubject+'::A')});
     for(const g of [2,3])await setDoc(doc(d,'students','sero-g'+g),{class:String(g),section:'A',active:true});
   });
-  for(const g of [2,3]){
-    await assertFails(setDoc(seroRef('unapproved-g'+g),{...seroData,studentId:'sero-g'+g,className:String(g),outcomeId:'cdc2076-g'+g+'-1'}));
+  const approvedRanges=[{"g":"1","unit":"म र मेरो परिवार","ids":[1,2,3,4,5]},{"g":"1","unit":"मेरो दैनिक जीवन","ids":[6,7,8,9]},{"g":"1","unit":"हाम्रो समुदाय","ids":[10,11,12]},{"g":"1","unit":"हाम्रो विद्यालय","ids":[13,14,15]},{"g":"1","unit":"हाम्रा वरपरका जीवजन्तु","ids":[16,17]},{"g":"1","unit":"हाम्रो वातावरण","ids":[18,19]},{"g":"1","unit":"मेरो सिर्जना","ids":[20,21,22]},{"g":"1","unit":"हाम्रो संस्कृति","ids":[23]},{"g":"1","unit":"सञ्चार प्रविधि र बजार","ids":[24,25]},{"g":"1","unit":"हाम्रो वरपरको संसार","ids":[26,27]},{"g":"2","unit":"म र मेरो परिवार","ids":[1,2,3,4,5,6]},{"g":"2","unit":"मेरो दैनिक जीवन","ids":[7,8,9,10,11,12]},{"g":"2","unit":"हाम्रो समुदाय","ids":[13,14,15,16,17,18]},{"g":"2","unit":"हाम्रो विद्यालय","ids":[19,20,21,22]},{"g":"2","unit":"हाम्रा वरपरका जीवजन्तु","ids":[23,24]},{"g":"2","unit":"हाम्रो वातावरण","ids":[25,26,27]},{"g":"2","unit":"मेरो सिर्जना","ids":[28,29,30]},{"g":"2","unit":"हाम्रो संस्कृति","ids":[31]},{"g":"2","unit":"सञ्चार प्रविधि र बजार","ids":[32,33]},{"g":"2","unit":"हाम्रो वरपरको संसार","ids":[34,35,36]},{"g":"3","unit":"म र मेरो परिवार","ids":[1,2,3,4,5,6]},{"g":"3","unit":"मेरो दैनिक जीवन","ids":[7,8,9,10]},{"g":"3","unit":"हाम्रो समुदाय","ids":[11,12,13,14,15,16]},{"g":"3","unit":"हाम्रो विद्यालय","ids":[17,18,19,20]},{"g":"3","unit":"हाम्रा वरपरका जीवजन्तु","ids":[21,22]},{"g":"3","unit":"हाम्रो वातावरण","ids":[23,24]},{"g":"3","unit":"मेरो सिर्जना","ids":[25,26,27]},{"g":"3","unit":"हाम्रो संस्कृति","ids":[28,29]},{"g":"3","unit":"सञ्चार प्रविधि र बजार","ids":[30,31]},{"g":"3","unit":"हाम्रो वरपरको संसार","ids":[32,33,34,35]}];
+  for(const {g,unit,ids} of approvedRanges){
+    const base={...seroData,studentId:g==='1'?'sero-test-a':'sero-g'+g,className:g,unit};
+    for(const n of [...new Set([ids[0],ids.at(-1)])])await assertSucceeds(setDoc(seroRef('source-boundary-'+g+'-'+n),{...base,outcomeId:'cdc2076-g'+g+'-'+n}));
+    await assertFails(setDoc(seroRef('invalid-block-'+g+'-'+ids[0]),{...base,outcomeId:'cdc2076-g'+g+'-99'}));
   }
   await assertFails(updateDoc(seroRef('regular'),{indicators:[true,true,true,true]}));
   await assertFails(updateDoc(seroRef('support'),{usedTools:['परिवर्तन','','','']}));
@@ -555,8 +561,11 @@ try {
   await assertSucceeds(getDoc(seroRef('regular',adminCdcDb)));
   await assertSucceeds(setDoc(seroRef('admin-write',adminCdcDb),{...seroData,createdBy:ADMIN}));
   await assertFails(setDoc(seroRef('admin-invalid-indicators',adminCdcDb),{...seroData,indicators:[true],createdBy:ADMIN}));
-  await assertFails(updateDoc(seroRef('admin-write',adminCdcDb),{date:'2083-08-08'}));
-  await assertFails(deleteDoc(seroRef('admin-write',adminCdcDb)));
+  await assertSucceeds(updateDoc(seroRef('admin-write',adminCdcDb),{date:'2083-08-08'}));
+  await assertFails(updateDoc(seroRef('admin-write',adminCdcDb),{indicators:[true]}));
+  await assertFails(updateDoc(seroRef('admin-write',adminCdcDb),{outcomeId:'cdc2076-g1-2'}));
+  await assertFails(deleteDoc(seroRef('regular',seroViewerDb)));
+  await assertSucceeds(deleteDoc(seroRef('admin-write',adminCdcDb)));
   await assertFails(getDoc(seroRef('regular',testEnv.unauthenticatedContext().firestore())));
   await assertFails(setDoc(cdc('binary-in-legacy',seroDb),seroData));
   console.log('Our Surroundings binary evidence: scope, four booleans, read-only roles, append-only writes and legacy separation passed');

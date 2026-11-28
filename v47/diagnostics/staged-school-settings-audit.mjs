@@ -6,6 +6,8 @@ import {createRequire} from 'node:module';
 import {auditAllTermSettingsCoverage} from '../entry-settings-coverage.mjs';
 import {previewV46MarkSettingsMigration} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
+import {iemisSubjectKey} from '../iemis-ledger.js';
+import {primarySubjectKey} from '../primary-assessment-teacher-worksheet.mjs';
 const project='smss-exam-portal-v47',terms=['1st','2nd','3rd','final'];
 const classes=Array.from({length:10},(_,i)=>String(i+1));
 const requireScope=sid=>{if(typeof sid!=='string'||!/^\d{5,20}$/.test(sid))throw Error('Invalid school ID')};
@@ -35,6 +37,47 @@ const present=v=>v!==undefined&&v!==null&&v!=='';
 const countBy=(rows,key)=>Object.fromEntries([...new Set(rows.map(key))].sort().map(k=>[k,rows.filter(r=>key(r)===k).length]));
 // Count possible exact-name/class mappings, never assume a term or fan out a
 // group setting to all exams. All raw labels, IDs, and scores stay in memory.
+// Use existing V46/V47 subject aliases for candidate discovery only.
+// Never replace a subject ID, assign a teacher or choose an exam from aliases.
+export function summarizeLegacySubjectCandidates({schoolId,subjects,settings}){
+ const counts=[],classCounts={};
+ const key=(label,grade)=>{
+  if(typeof label!=='string'||!label.trim())return null;
+  return Number(grade)<=5?primarySubjectKey(label)??iemisSubjectKey(label):iemisSubjectKey(label);
+ };
+ for(const {fields:d} of settings){
+  const group=typeof d.classGroup==='string'&&Object.hasOwn(groups,d.classGroup)?groups[d.classGroup]:null,specific=classValue(d.className);
+  let kind='Unsupported scope',validComponents=0;
+  if(group&&(!present(d.className)||specific&&group.includes(specific))&&typeof d.subject==='string'&&d.subject.trim()){
+   const scope=specific?[specific]:group;
+   const eligible=subjects.filter(r=>r.fields.active===true&&scope.includes(r.fields.class));
+   const exact=eligible.filter(r=>norm(r.fields.name)===norm(d.subject));
+   const aliases=eligible.filter(r=>key(r.fields.name,r.fields.class)&&key(r.fields.name,r.fields.class)===key(d.subject,r.fields.class));
+   // Exact name is not sufficient when another alias in the same class could conflict.
+   const candidates=exact.length?[...new Map([...exact,...aliases].map(r=>[r.id,r])).values()]:aliases;
+   if(!candidates.length)kind='No existing alias candidate';
+   else if(new Set(candidates.map(r=>r.fields.class)).size!==candidates.length)kind='Ambiguous within class';
+   else if(!specific&&candidates.length>1)kind='Group expansion review required';
+   else{
+    kind=exact.length?'Unique exact name/class candidate':'Unique existing alias candidate';
+    for(const r of candidates)try{
+     // The preview validator takes a term; a fixed validation-only sentinel
+     // checks legacy components without declaring an actual term or producing a write.
+     const args={schoolId,classId:r.fields.class,subjectId:r.id,examId:'1st',verifiedSubjectName:r.fields.name,legacy:{...d,subject:r.fields.name,...(specific?{className:specific}:{})}};
+     (Number(r.fields.class)<=5?previewV46PrimaryAchievementSettings:previewV46MarkSettingsMigration)(args);
+     validComponents++;
+    }catch{}
+   }
+  }
+  counts.push({kind,validComponents});
+  const bucket=specific??'group or unknown';
+  classCounts[bucket]??={records:0,uniqueCandidates:0,componentShapeValid:0};
+  classCounts[bucket].records++;
+  if(kind.startsWith('Unique '))classCounts[bucket].uniqueCandidates++;
+  classCounts[bucket].componentShapeValid+=validComponents;
+ }
+ return {records:counts.length,classification:countBy(counts,r=>r.kind),componentShapeValid:counts.reduce((n,r)=>n+r.validComponents,0),byClass:classCounts,termAssigned:false,writeAuthorized:false};
+}
 export function summarizeLegacySettings({schoolId,subjects,settings}){
  const results=[];
  for(const row of settings){
@@ -85,14 +128,17 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
   if(typeof a.active!=='boolean')return 'Invalid active flag';
   if(r.id!==[schoolId,a.uid,a.classId,a.subjectId].join(':'))return 'Noncanonical assignment ID';
   if(!m||m.role!=='teacher'||m.uid!==a.uid)return 'Missing or wrong teacher membership';
-  if(!s||s.class!==a.classId)return 'Missing or wrong class subject';
+  if(!s)return 'Missing subject ID';
+  if(s.class!==a.classId)return 'Subject registered to different class';
   if(a.active===true&&s.active!==true)return 'Inactive subject';
   if(a.active===true&&m.active!==true)return 'Teacher membership inactive';
   return 'Structurally valid';
  });
  const badAssignments=assignmentReasons.filter(r=>r!=='Structurally valid').length;
- const legacyMapping=summarizeLegacySettings({schoolId,subjects,settings:settings.filter(r=>!recognized.includes(r))});
- return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
+ const legacySettings=settings.filter(r=>!recognized.includes(r));
+ const legacyMapping=summarizeLegacySettings({schoolId,subjects,settings:legacySettings});
+ const legacySubjectCandidates=summarizeLegacySubjectCandidates({schoolId,subjects,settings:legacySettings});
+ return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,legacySubjectCandidates,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
 }
 // Only the previously configured V47 service-account secret is accepted in CI.
 // This does not request extra IAM grants, nor expose tokens or raw fields.

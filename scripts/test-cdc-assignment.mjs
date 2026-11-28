@@ -94,6 +94,12 @@ w.eval(readFileSync('iemis-importer/transfer.js','utf8'));
 // Capture the lexical catalogue in the same eval that initializes the page.
 const legacyForms=w.eval(html.slice(html.indexOf('const cdcCoreSubjects'),html.indexOf('let iemisEntryGrid'))+'\nwindow.__testSeroApproved=cdcSeroGuideApproved;\nwindow.__testSeroEntryForm=cdcSeroGuideEntryForm;\nwindow.__testScienceSourceCount=cdcUpperScienceByTitle.size;\nopenCdcAssessment();\ncdcLegacyMathRubrics;');
 const field=name=>w.document.querySelector('[data-cdc="'+name+'"]');
+const productionApprovals=[...w.__testSeroApproved];
+assert.equal(productionApprovals.length,27);
+for(const key of productionApprovals){const i=key.indexOf(':');assert.ok(w.__testSeroEntryForm(key.slice(0,i),key.slice(i+1),'2083'),key);}
+w.__testSeroApproved.clear(); // legacy preview regression only; restore below
+const originalLoadCdc=w.loadCdcAssessmentPage;
+w.loadCdcAssessmentPage=async (...args)=>{await originalLoadCdc(...args);if(!args[0]?.reportOnly&&field('showSingleForm'))field('showSingleForm').onclick();};
 const choice=(name,value)=>{field(name).value=value;field(name).onchange();};
 // Compact teacher workspace: keep the official form first and secondary panels closed.
 for(const name of ['extraReference','extraObservations','extraReports','extraManual','extraRecords','extraActions']){
@@ -395,6 +401,7 @@ assert.equal(field('annexScroll').getAttribute('tabindex'),'0');
 assert.match(html,/@media screen and \(max-width:700px\)/);
 assert.match(html,/data-cdc-subject-key="mathematics"/);
 console.log('Real registry spellings, local subjects and IEMIS-coded subject labels passed');
+// Multi-form workspace must preserve the original form and student-scoped reads.
 // Standalone assessment route is a sibling of Marks Entry and requires no marks or exams.
 assert.match(html,/<summary>[^\n]*Manage Exam<\/summary>[^\n]*data-page="cdc-assessment"/);
 assert.doesNotMatch(html,/id="openCdcAssessment"/);
@@ -1347,7 +1354,7 @@ for(const [unit,count,groups] of [['म र मेरो परिवार',20,
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-sero-save]').length,0);
  assert.equal(field('printForm').disabled,true);
  assert.equal(field('annexRows').querySelectorAll('[data-cdc-grid-edit]').length,0);
- assert.match(field('annexStatus').textContent,/समीक्षा प्रति/);
+ assert.match(field('annexStatus').textContent,/स्रोतसँग अङ्कन संरचना मिलाइएको; डिजिटल शब्दावली कार्यगत रूपान्तरण हो/);
  const regular=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="0"]')];
  const remedial=[...field('annexRows').querySelectorAll('[data-cdc-sero-indicator="1"]')];
  const scores=[...field('annexRows').querySelectorAll('[data-cdc-sero-score="0"]')];
@@ -1535,7 +1542,7 @@ for(const grade of ['2','3']){
   assert.ok(outcomes.every(cell=>cell.textContent.includes(' — ')));
   assert.ok([...rows.rows].every(row=>!row.textContent.includes('मूल PDF हेर्नुहोस्')));
   const sampleLabels=grade==='2'
-   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
+   ?[/छिमेकीलाई सम्मान गर्ने/,/चुम्बकबाट आकर्षित वस्तु छुट्याउने/,/स्थलचर जनावर चिन्ने/,/२५ मिटर दौड/,/सजीव–निर्जीव छुट्याउने/,/सार्वजनिक सम्पदा संरक्षण/,/स्थानीय गीत लयमा गाउने/,/राष्ट्रिय चिह्नको वर्णन/,/परिवारको आम्दानीका स्रोत/,/पानीका स्रोत/]
    :[/पारिवारिक नाता/,/ध्वनि प्रदूषणको असर/,/खोपको महत्त्व/,/प्राथमिक उपचारको अवधारणा/,/खाद्य शृङ्खलाको उदाहरण/,/ठोस, तरल र ग्यासका गुण परीक्षण/,/स्थानीय बाजा अभ्यास/,/स्थानीय भाषा/,/पैसा बचत/,/दिन र रातको कारण/];
   assert.match(rows.textContent,sampleLabels[i]);
   if(grade==='3'&&i===1)assert.match(rows.textContent,/चुम्बकीय र अचुम्बकीय वस्तु/);
@@ -1921,7 +1928,7 @@ console.log('Grades 1–3 CDC 2076 Annex 2 annual report and portfolio PDF Word 
      }
      if(subject==='nepali')assert.deepEqual(new Set(forms),new Set(Object.keys(grade==='1'?audit.cdcPrimaryNepaliForms:audit.cdcNepaliThemeForms[grade])));
      if(subject==='english')assert.deepEqual(new Set(forms),new Set(Object.keys(audit.cdcPrimaryEnglishForms[grade])));
-     if(subject==='serophero')assert.equal(keys.length,10);
+     if(subject==='serophero'){assert.equal(keys.length,10);assert.equal(forms.length,10);}
      assert.ok(entries.slice(0,forms.length).every(x=>x.kind==='form')||subject==='serophero');
    }
  }
@@ -1980,6 +1987,202 @@ const readsAfterReset=coverageReads;
 await w.loadCdcDashboardOverview();assert.equal(coverageReads,readsAfterReset+3);
 reportHub.remove();reportDetail.remove();dash.remove();
 console.log('CDC dashboard and report hub: current-year coverage, deduplication, cached reads, export, admin read-only drill-down and role isolation passed');
+}
+// Class/theme workspace: all authorized students on one page, original CDC
+// regular/support controls, independent scopes, and a read-only all-theme view.
+{
+ for(const key of productionApprovals)w.__testSeroApproved.add(key);
+ w.loadCdcAssessmentPage=originalLoadCdc;
+ w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};w.currentSchoolSettings.academicYear='2083';
+ const previousMatrixFixtures=new Map(observations);observations.clear();
+ // Use the actual application parser: the earlier mock accepts ASCII digits only.
+ const oldClassParser=w.classNoFromName;
+ const classParserSource=html.match(/^function classNoFromName[^\n]+/m)?.[0];
+ assert.ok(classParserSource);
+ w.classNoFromName=new Function(classParserSource+';return classNoFromName;')();
+ for(const alias of ['5','५','Class 5','Class ५','कक्षा 5','कक्षा ५'])assert.equal(w.classNoFromName(alias),'5');
+ w.setDoc=async(ref,data)=>{assert.match(ref.path,/^cdc_observations\//);assert.ok(!observations.has(ref.path));observations.set(ref.path,data);};
+ const multiHost=w.document.createElement('div');w.document.body.append(multiHost);
+ const pupils=[{id:'multi-a',class:'Class 5',section:'A',name:'Multi A'},{id:'multi-b',class:'Class 5',section:'A',name:'Multi B'},{id:'multi-other',class:'Class 4',section:'A',name:'Other'}];
+ w.getDocs=async name=>({docs:name==='students'?pupils.map(p=>({id:p.id,data:()=>p})):[{id:'math',data:()=>({className:'Class 5',subject:'Mathematics'})}]});
+ const seenScopes=[];
+ w.getDocsFromServer=async q=>{
+   const filters=Object.fromEntries(q.filters.map(([k,,v])=>[k,v]));
+   seenScopes.push(filters);
+   return {docs:[...observations.entries()].filter(([path,o])=>path.startsWith(q.name+'/')&&q.filters.every(([k,op,v])=>op==='in'?v.includes(o[k]):o[k]===v)).map(([path,o])=>({ref:{path},data:()=>o}))};
+ };
+ await w.loadCdcAssessmentPage({host:multiHost});
+ const root=multiHost.querySelector('#cdcAssessmentDialog'),main=n=>root.querySelector('[data-cdc="'+n+'"]');
+ main('class').value='5';main('class').onchange();
+ main('subject').value='Mathematics';main('subject').onchange();
+ main('themePick').value='ज्यामिति';await main('themePick').onchange();
+ const panel=multiHost.querySelector('[data-cdc-multi="class"]');
+ assert.ok(panel,'theme selection opens class matrix automatically');
+ assert.equal(panel.querySelector('[data-cdc-class-delete-all]').textContent,'Delete All — Class 5');
+ assert.equal(panel.querySelectorAll('[data-cdc-matrix-outcome]').length,5);
+ const rows=[...panel.querySelectorAll('[data-cdc-matrix-outcome="0"] tbody tr')];
+ assert.equal(rows.length,2);assert.equal(rows[0].dataset.cdcMatrixStudent,'multi-a');assert.equal(rows[1].dataset.cdcMatrixStudent,'multi-b');
+ assert.ok(rows.every(row=>!row.querySelector('[data-cdc-matrix-rating="regular"]').disabled&&row.querySelector('[data-cdc-matrix-rating="support"]')));
+ assert.ok(seenScopes.some(o=>o.studentId==='multi-a')&&seenScopes.some(o=>o.studentId==='multi-b'));
+ assert.ok(!seenScopes.some(o=>o.studentId==='multi-other'));
+ const savedBefore=observations.size;
+ // Mobile table uses explicit columns rather than shrinking pupil names to a single character.
+ const table=panel.querySelector('[data-cdc-matrix-table]');
+ assert.equal(table.style.tableLayout,'fixed');
+ assert.equal(table.querySelector('col').style.width,'190px');
+ assert.equal(rows[0].querySelector('[data-cdc-matrix-name]').style.wordBreak,'normal');
+ assert.equal(rows[0].querySelector('[data-cdc-matrix-name]').textContent,'1. Multi A (A)');
+ const blankDate=rows[1].querySelector('[data-cdc-matrix-date="regular"]');
+ blankDate.dispatchEvent(new w.Event('focus'));
+ assert.equal(blankDate.value,'2083-08-07','blank date fills on focus without entering rating');
+ const regularDate=rows[0].querySelector('[data-cdc-matrix-date="regular"]');
+ regularDate.click();assert.equal(regularDate.value,'2083-08-07');
+ const supportDate=rows[0].querySelector('[data-cdc-matrix-date="support"]');
+ supportDate.click();assert.equal(supportDate.value,'2083-08-07');
+ supportDate.value='2083-08-08';supportDate.click();assert.equal(supportDate.value,'2083-08-08','manual or saved date is never overwritten');
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore,'date alone never writes records');
+ rows[0].querySelector('[data-cdc-matrix-date="regular"]').value='2083-08-07';
+ rows[0].querySelector('[data-cdc-matrix-rating="regular"]').value='2';
+ rows[0].querySelector('[data-cdc-matrix-date="support"]').value='2083-08-08';
+ rows[0].querySelector('[data-cdc-matrix-rating="support"]').value='4';
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore+2);
+ assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.level===2&&o.stage==='regular'));
+ assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.level===4&&o.stage==='support'));
+ assert.equal(rows[1].querySelector('[data-cdc-matrix-rating="regular"]').value,'');
+ await panel.querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore+2);
+ main('showSingleForm').onclick();
+ assert.equal(multiHost.querySelector('[data-cdc-multi]'),null);
+ main('student').value='multi-a';main('student').onchange();
+ await main('showStudentThemes').onclick();
+ const view=multiHost.querySelector('[data-cdc-multi="student"]');assert.ok(view);
+ assert.equal(view.querySelectorAll(':scope > details').length,5);
+ assert.equal(view.querySelectorAll('[data-cdc-grid-edit]').length,0);
+ assert.equal(observations.size,savedBefore+2);
+ // Admin-only corrections and delete actions must operate on real snapshot identities.
+ let confirmMessages=[],approve=false,transactionCount=0;
+ const oldConfirm=w.confirm,oldTransaction=w.runTransaction;
+ w.confirm=msg=>{confirmMessages.push(msg);return approve;};
+ w.runTransaction=async(_db,fn)=>{
+   transactionCount++;const writes=[];
+   await fn({get:async ref=>({exists:()=>observations.has(ref.path),data:()=>observations.get(ref.path)}),
+     update:(ref,patch)=>writes.push(()=>observations.set(ref.path,{...observations.get(ref.path),...patch})),
+     delete:ref=>writes.push(()=>observations.delete(ref.path))});
+   writes.forEach(write=>write());
+ };
+ await main('showClassForms').onclick();
+ const fresh=()=>multiHost.querySelector('[data-cdc-multi="class"]');
+ const first=()=>fresh().querySelector('[data-cdc-matrix-outcome="0"] tbody tr');
+ const regular=()=>first().querySelector('[data-cdc-matrix-delete="regular"]');
+ assert.equal(regular().hidden,false);
+ const edit=first().querySelector('[data-cdc-matrix-correct="regular"]');
+ assert.equal(edit.hidden,false);edit.onclick();
+ first().querySelector('[data-cdc-matrix-rating="regular"]').value='3';
+ await fresh().querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(transactionCount,0,'cancelled edit performs no transaction');
+ approve=true;
+ await fresh().querySelector('[data-cdc-matrix-save]').onclick();
+ assert.equal(observations.size,savedBefore+2,'explicit correction updates without appending');
+ const savedEntry=[...observations.entries()].find(([,o])=>o.studentId==='multi-a'&&o.stage==='regular');
+ assert.equal(savedEntry[1].level,3);
+ approve=false;await regular().onclick();
+ assert.equal(observations.size,savedBefore+2,'cancelled individual delete preserves records');
+ approve=true;
+ // Simulate a confirmed deletion whose transaction has not yet answered.
+ const normalDeleteTransaction=w.runTransaction;
+ let releaseDelete,enteredDelete;
+ const deleteEntered=new Promise(resolve=>{enteredDelete=resolve;});
+ const deleteGate=new Promise(resolve=>{releaseDelete=resolve;});
+ w.runTransaction=async(...args)=>{enteredDelete();await deleteGate;return normalDeleteTransaction(...args);};
+ const pendingDelete=regular().onclick();await deleteEntered;
+ const pendingStatus=fresh().querySelector('[role="status"]');
+ assert.equal(pendingStatus.dataset.cdcDeletePending,'true');
+ assert.match(pendingStatus.textContent,/पुष्टि भयो/);
+ assert.equal(regular().disabled,true,'prevent duplicate deletes during pending transaction');
+ assert.equal(observations.size,savedBefore+2);
+ releaseDelete();await pendingDelete;w.runTransaction=normalDeleteTransaction;
+ assert.match(fresh().querySelector('[role="status"]').textContent,/सफलतापूर्वक मेटाइयो/);
+ assert.equal(observations.size,savedBefore+1,'one stage only is removed');
+ assert.ok([...observations.values()].some(o=>o.studentId==='multi-a'&&o.stage==='support'));
+ const support=[...observations.values()].find(o=>o.studentId==='multi-a'&&o.stage==='support');
+ const outside=[['cdc_observations/other-grade',{...support,className:'Class 4'}],['cdc_observations/other-year',{...support,academicYear:'2082'}],['cdc_serofero_indicators/other-binary',{...support,className:'Class 1'}]];
+ for(const [key,data] of outside)observations.set(key,data);
+ // Class delete includes inactive/orphaned pupils and alternate class spelling, not just current roster.
+ const extra='cdc_observations/same-class-other-subject';
+ observations.set(extra,{...support,className:'कक्षा ५',subject:'English',studentId:'orphan'});
+ // A deployed project may lack a composite index; class deletion must use a single-field query.
+ const beforeDeleteRead=w.getDocsFromServer;
+ let deleteQueries=0;
+ w.getDocsFromServer=async q=>{
+   if(q.filters?.some(([key,op])=>key==='className'&&op==='in')){
+     assert.equal(q.filters.length,1,'class delete must not depend on a composite index');
+     deleteQueries++;
+   }
+   return beforeDeleteRead(q);
+ };
+ approve=false;await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.equal(deleteQueries,2);
+ assert.match(fresh().querySelector('[role="status"]').textContent,/रद्द गरियो/);
+ assert.ok(observations.has(extra));assert.match(confirmMessages.at(-1),/कक्षा 5.*2083.*2 अभिलेख/);
+ approve=true;
+ w.runTransaction=async()=>{throw Object.assign(Error('synthetic permission error'),{code:'permission-denied'});};
+ await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.match(fresh().querySelector('[role="status"]').textContent,/permission-denied/);
+ assert.ok(observations.has(extra),'failed transaction does not erase data');
+ assert.equal(fresh().querySelector('[data-cdc-class-delete-all]').disabled,false);
+ w.runTransaction=normalDeleteTransaction;
+ await fresh().querySelector('[data-cdc-class-delete-all]').onclick();
+ assert.ok(!observations.has(extra));
+ assert.ok(![...observations.values()].some(o=>o.studentId==='multi-a'&&o.className==='Class 5'&&o.academicYear==='2083'));
+ for(const [key] of outside){assert.ok(observations.has(key),'other class/year/collection preserved');observations.delete(key);}
+ w.getDocsFromServer=beforeDeleteRead;
+ w.confirm=oldConfirm;w.runTransaction=oldTransaction;
+ observations.clear();for(const [key,data] of previousMatrixFixtures)observations.set(key,data);
+ w.classNoFromName=oldClassParser;
+ main('showSingleForm').onclick();multiHost.remove();
+ console.log('Class theme forms: same CDC renderer, all scoped pupils, independent saved ratings, all-theme read-only view passed');
+}
+// Check the same mobile matrix for every class/national subject and both score modes.
+{
+ w.isAdmin=()=>true;current.roles=['admin'];current.active=true;serverRole={...current};
+ const host=w.document.createElement('div');w.document.body.append(host);
+ const pupils=grades.map(grade=>({id:'mobile-'+grade,class:'Class '+grade,section:'A',name:'Long Student Name '+grade}));
+ const registry=grades.flatMap(grade=>(Number(grade)<=3?lowerSubjects:upperSubjects).concat('Local Subject').map(subject=>({className:'Class '+grade,subject})));
+ w.getDocs=async name=>({docs:(name==='students'?pupils:registry).map((p,i)=>({id:p.id||'reg-'+i,data:()=>p}))});
+ w.getDocsFromServer=async()=>({docs:[]});
+ const before=observations.size;
+ await w.loadCdcAssessmentPage({host});
+ const root=host.querySelector('#cdcAssessmentDialog'),f=n=>root.querySelector('[data-cdc="'+n+'"]');
+ let checked=0;
+ for(const grade of grades){
+   f('class').value=grade;await f('class').onchange();
+   for(const subject of Number(grade)<=3?lowerSubjects:upperSubjects){
+     f('subject').value=subject;await f('subject').onchange();
+     const option=w.cdcEntryThemeOptions(grade,subject,'2083').find(x=>x.kind==='form');
+     assert.ok(option,grade+' '+subject+' must have a source form');
+     f('themePick').value=option.unit;await f('themePick').onchange();
+     const panel=host.querySelector('[data-cdc-multi="class"]');
+     const table=panel?.querySelector('[data-cdc-matrix-table]');
+     assert.ok(table,grade+' '+subject+' class matrix');
+     const row=table.querySelector('tbody tr');
+     assert.match(row.querySelector('[data-cdc-matrix-name]').textContent,/Long Student Name/);
+     assert.equal(table.querySelector('col').style.width,'190px');
+     for(const stage of ['regular','support']){
+       const date=row.querySelector('[data-cdc-matrix-date="'+stage+'"]');
+       assert.equal(date.disabled,false);
+       date.click();assert.equal(date.value,'2083-08-07',grade+' '+subject+' '+stage);
+       assert.equal(row.querySelectorAll('[data-cdc-matrix-rating="'+stage+'"]').length,subject==='serophero'?4:1);
+     }
+     checked++;
+   }
+   f('subject').value='Local Subject';await f('subject').onchange();
+   assert.equal(f('localSubjectHelp').hidden,false,'local subject remains source-dependent');
+ }
+ assert.equal(checked,24);assert.equal(observations.size,before);
+ host.remove();
+ console.log('All 24 national class/subject mobile matrices: readable name, both date taps, correct score mode, no writes; local subject source boundary preserved');
 }
 // CDC backup: verify legacy and new exports in an isolated synthetic DOM.
 // Assessment evidence must never be replayed through ordinary client restore.

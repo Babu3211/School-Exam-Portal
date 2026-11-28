@@ -42,3 +42,18 @@ import {summarizeLegacySettings} from './diagnostics/staged-school-settings-audi
  assert.equal(safe.classification['Unrecognized legacy structure'],2);
  assert.equal(safe.classification['Explicit term review required'],1);
 }
+
+import {summarizeLegacySubjectCandidates} from './diagnostics/staged-school-settings-audit.mjs';
+{
+ const primarySubjects=[row('math',{class:'1',name:'Mathematics',active:true})];
+ const primary=row('old',{classGroup:'1-3',className:'1',subject:'गणित',components:[{name:'No. of Learning Achievement',fullMarks:3},{name:'Full Marks',fullMarks:12},{name:'Obtained Learning Achievement',fullMarks:12}]});
+ const r=summarizeLegacySubjectCandidates({schoolId,subjects:primarySubjects,settings:[primary]});
+ assert.equal(r.classification['Unique existing alias candidate'],1);
+ assert.equal(r.componentShapeValid,1);assert.equal(r.termAssigned,false);assert.equal(r.writeAuthorized,false);
+ const ambiguous=summarizeLegacySubjectCandidates({schoolId,subjects:[...primarySubjects,row('math2',{class:'1',name:'Math',active:true})],settings:[primary]});
+ assert.equal(ambiguous.classification['Ambiguous within class'],1);assert.equal(ambiguous.componentShapeValid,0);
+ const wrong=summarizeStagedSettings({...args,assignments:[row('12345:teacher:8:computer',{uid:'teacher',classId:'8',subjectId:'computer',active:true})]});
+ assert.equal(wrong.assignmentReviewReasons['Subject registered to different class'],1);
+ const missing=summarizeStagedSettings({...args,assignments:[row('12345:teacher:9:unknown',{uid:'teacher',classId:'9',subjectId:'unknown',active:true})]});
+ assert.equal(missing.assignmentReviewReasons['Missing subject ID'],1);
+}
