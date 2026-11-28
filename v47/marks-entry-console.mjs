@@ -1,3 +1,4 @@
+import {studentDisplayName} from './student-display-name.mjs';
 import {neError} from './nepali-feedback.mjs';
 import {readSmssMarksExcel} from './import-class-marks-excel.mjs';
 import {planClassMarksGridPaste} from './class-marks-grid-paste.mjs';
@@ -54,7 +55,7 @@ async function loadOptions(collection,element,label){if(busy||!actor)return;if(c
  if(request!==optionRequest||attempt!==epoch||schoolClass!==$('schoolClass').value||auth?.currentUser?.uid!==uid||actor?.uid!==uid||schoolId!==selectedSchoolId)throw new Error('Options selection changed during load');
  const filtered=collection==='students'?rows:rows.filter(row=>row.active===true);
  element.replaceChildren();if(collection==='students'){studentsLoaded=true;loadedStudentClass=schoolClass}else{subjectsLoaded=true;loadedSubjectClass=schoolClass}
- for(const row of filtered){const option=document.createElement('option');option.value=row.id;option.textContent=String(row.name??row.id)+' ('+row.id+')';element.append(option)}
+ for(const row of filtered){const option=document.createElement('option');option.value=row.id;option.textContent=(collection==='students'?studentDisplayName(row):String(row.name??row.id))+' ('+row.id+')';element.append(option)}
  status(filtered.length+' '+label+' loaded. Development preview only; mark saving is disabled.');
  }catch(e){if(request===optionRequest&&attempt===epoch&&actor){if(collection==='students'){studentsLoaded=false;loadedStudentClass=null;$('studentId').replaceChildren()}else{subjectsLoaded=false;loadedSubjectClass=null;$('subjectId').replaceChildren()}status('विवरण लोड भएन: '+neError(e))}}finally{if(request===optionRequest&&attempt===epoch)lock(false)}}
 $('loadStudents').onclick=()=>loadOptions('students',$('studentId'),'students');$('loadSubjects').onclick=()=>loadOptions('subjects',$('subjectId'),'subjects');
@@ -117,13 +118,13 @@ $('loadClassMarks').onclick=async()=>{
   $('classDraftStatus').textContent=restoredDraft?'Previously saved full-class Draft Revision '+classDraftRevision+' restored. Check all marks before updating.':'No prior Draft. Inspect all marks before saving.';
   classMarkSettings=settings;
   const header=$('classMarkHeader');header.replaceChildren();for(const label of ['Student','Absent',...settings.components.map(c=>c.name+' / '+c.fullMarks)]){const th=document.createElement('th');th.textContent=label;header.append(th)}
-  classMarkRoster=[...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));
+  classMarkRoster=[...roster.students].sort((a,b)=>studentDisplayName(a).localeCompare(studentDisplayName(b),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id));
   const restoredById=new Map(restoredDraft?.entries.map(entry=>[entry.studentId,entry])??[]);
   classMarkContext={classId,term,subjectId};
   const body=$('classMarkRows'),fragment=document.createDocumentFragment();
   for(const student of classMarkRoster){
    const row=document.createElement('tr');row.dataset.studentId=student.id;
-   const name=document.createElement('td');name.textContent=String(student.name??student.id);row.append(name);
+   const name=document.createElement('td');name.textContent=studentDisplayName(student);row.append(name);
    const saved=restoredById.get(student.id);
    const absenceCell=document.createElement('td'),absence=document.createElement('input');absence.type='checkbox';absence.dataset.absent='true';absence.checked=saved?.isAbsent===true;absence.setAttribute('aria-label','Absent '+student.id);absenceCell.append(absence);row.append(absenceCell);
    for(const component of settings.components){
@@ -309,7 +310,7 @@ $('downloadClassReviewExcel').onclick=()=>{
  const {classId,subjectId,term}=classMarkContext;
  if(classId!==$('schoolClass').value||subjectId!==$('subjectId').value||term!==$('term').value){invalidateClassMarks();status('छनोट परिवर्तन भयो। कक्षाको अङ्क समीक्षा पुनः लोड गर्नुहोस्।');return}
  try{
-  const studentNames=Object.fromEntries(classMarkRoster.map(s=>[s.id,String(s.name??s.id)]));
+  const studentNames=Object.fromEntries(classMarkRoster.map(s=>[s.id,studentDisplayName(s)]));
   const workbook=buildClassReviewExcel({json:reviewPackage.json,studentNames});
   const url=URL.createObjectURL(workbook);
   const link=document.createElement('a');link.href=url;link.download=reviewPackage.filename.replace(/\.json$/,'.xlsx');link.click();

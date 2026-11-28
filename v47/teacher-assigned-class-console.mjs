@@ -1,3 +1,4 @@
+import {studentDisplayName} from './student-display-name.mjs';
 import {readSmssMarksExcel} from './import-class-marks-excel.mjs';
 import {buildClassMarksExcelSample} from './class-marks-excel-sample.mjs';
 import {prepareLegacyDraftPrefill} from './legacy-draft-prefill.mjs';
@@ -103,9 +104,9 @@ $('load').onclick=async()=>{
   await verifyTeacherSubjectAssignment({db,api,actor,schoolId:id,classId,subjectId,revalidate});
   if(request!==epoch||selection!==selectionEpoch||classId!==$('classId').value||subjectId!==$('subjectId').value.trim())throw new Error('Selection changed');
   const fragment=document.createDocumentFragment();
-  for(const student of [...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id))){
+  for(const student of [...roster.students].sort((a,b)=>studentDisplayName(a).localeCompare(studentDisplayName(b),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id))){
    const tr=document.createElement('tr');
-   for(const value of [student.name??student.id,student.class,student.id]){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}
+   for(const value of [studentDisplayName(student),student.class,student.id]){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}
    fragment.append(tr);
   }
   $('students').append(fragment);$('count').textContent=roster.count+' assigned-class students (read-only)';message('विद्यार्थी सूची लोड भयो। यो पृष्ठबाट अंक Save गर्न मिल्दैन।');
@@ -125,9 +126,9 @@ $('loadAttendance').onclick=async()=>{
   await verifyTeacherAttendanceDuty({db,api,actor,schoolId:id,classId,revalidate});
   if(request!==epoch||selection!==selectionEpoch||classId!==$('classId').value)throw new Error('Class changed');
   const fragment=document.createDocumentFragment();
-  for(const student of [...roster.students].sort((a,b)=>String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id))){
+  for(const student of [...roster.students].sort((a,b)=>studentDisplayName(a).localeCompare(studentDisplayName(b),'en',{sensitivity:'base',numeric:true})||a.id.localeCompare(b.id))){
    const tr=document.createElement('tr');
-   for(const value of [student.name??student.id,student.class,student.id]){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}
+   for(const value of [studentDisplayName(student),student.class,student.id]){const td=document.createElement('td');td.textContent=String(value);tr.append(td)}
    fragment.append(tr);
   }
   $('students').append(fragment);$('count').textContent=roster.count+' attendance-duty students (read-only)';
@@ -250,7 +251,7 @@ $('loadTeacherDraft').onclick=async()=>{
   await revalidate();
   if(current!==draftEpoch)return;
   const students=[...roster.students].sort((a,b)=>
-   String(a.name??a.id).localeCompare(String(b.name??b.id),'en',{numeric:true})||a.id.localeCompare(b.id));
+   studentDisplayName(a).localeCompare(studentDisplayName(b),'en',{numeric:true})||a.id.localeCompare(b.id));
   draftContext={schoolId:id,classId,subjectId,examId,settings,students,revision:restored?.revision??0};
   let prefill=null;
   if(!restored&&['1st','2nd','3rd','final'].includes(examId)&&/^(?:[1-9]|10)$/.test(classId)){
@@ -268,7 +269,7 @@ $('loadTeacherDraft').onclick=async()=>{
   const fragment=document.createDocumentFragment();
   for(const student of students){
    const tr=document.createElement('tr');tr.dataset.studentId=student.id;
-   const label=document.createElement('td');label.textContent=student.name??student.id;tr.append(label);
+   const label=document.createElement('td');label.textContent=studentDisplayName(student);tr.append(label);
    const prior=previous.get(student.id);
    const absenceCell=document.createElement('td'),absent=document.createElement('input');
    absent.type='checkbox';absent.dataset.absent='1';absent.checked=prior?.isAbsent===true;
@@ -304,8 +305,8 @@ async function withTeacherExcel(action){
   await verifyTeacherSubjectAssignment({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,revalidate});
   const settings=await discoverVerifiedSubjectExamSettings({db,api:serverApi,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,examId:c.examId,revalidate});
   const roster=await loadCompleteClassRoster({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId});
-  const names=new Map(c.students.map(s=>[s.id,String(s.name??s.id)]));
-  if(settings.settingsId!==c.settings.settingsId||JSON.stringify(settings.components)!==JSON.stringify(c.settings.components)||roster.count!==c.students.length||roster.students.some(s=>!isActiveEnrolledStudent(s)||names.get(s.id)!==String(s.name??s.id)))throw Error('Roster or settings changed; reload');
+  const names=new Map(c.students.map(s=>[s.id,studentDisplayName(s)]));
+  if(settings.settingsId!==c.settings.settingsId||JSON.stringify(settings.components)!==JSON.stringify(c.settings.components)||roster.count!==c.students.length||roster.students.some(s=>!isActiveEnrolledStudent(s)||names.get(s.id)!==studentDisplayName(s)))throw Error('Roster or settings changed; reload');
   await verifyTeacherSubjectAssignment({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,revalidate});
   check();
   await action({c,settings,roster,check,revalidate:async()=>{await verifyTeacherSubjectAssignment({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,revalidate});check()}});
@@ -321,7 +322,8 @@ $('teacherExcelSample').onclick=()=>withTeacherExcel(async({c,settings,check})=>
  $('teacherDraftStatus').textContent='Excel Sample डाउनलोड भयो। कुनै अङ्क सुरक्षित गरिएको छैन।';
 });
 $('teacherExcelImport').onclick=()=>{
- const file=$('teacherExcelFile').files?.[0];if(!file)return;
+ const file=$('teacherExcelFile').files?.[0];if(!file||busy||!draftContext)return;
+ $('teacherDraftStatus').textContent='Excel अभिलेख जाँच हुँदैछ…';
  return withTeacherExcel(async({c,settings,roster,check,revalidate})=>{
   const drafts=await readSmssMarksExcel(file,{...c,settings,students:roster.students});
   const result=inspectConfiguredClassMarks({...c,settings,expectedStudentIds:roster.studentIds,drafts});

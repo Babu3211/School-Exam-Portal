@@ -1,3 +1,4 @@
+import {studentDisplayName} from './student-display-name.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 // Browser-side XLSX import for SMSS templates edited in Excel or LibreOffice.
 // Supports ZIP stored and deflated entries; never executes workbook formulas.
@@ -59,7 +60,7 @@ export async function readSmssMarksExcel(file,{settings,schoolId,classId,subject
  const headers=['Student ID','Student Name','Absent (Yes/No)',...components.map(c=>c.name+' (max '+c.fullMarks+')')];
  if(parsed[0].length!==headers.length||headers.some((h,i)=>parsed[0][i]!==h))throw new Error('Excel columns differ from current Examination Settings');
  if(!Array.isArray(students)||students.length!==parsed.length-1||students.some(s=>!isActiveEnrolledStudent(s)))throw new Error('Excel roster differs from current class');
- const roster=new Map(students.map(s=>[s.id,String(s.name??s.id)])),seen=new Set(),drafts=[];
+ const roster=new Map(students.map(s=>[s.id,studentDisplayName(s)])),seen=new Set(),drafts=[];
  if(roster.size!==students.length)throw new Error('Duplicate student in authoritative roster');
  for(const row of parsed.slice(1)){
   if(row.length>headers.length||!roster.has(row[0])||seen.has(row[0]))throw new Error('Unknown, duplicate or incomplete student in Excel');

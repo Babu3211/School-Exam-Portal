@@ -14,3 +14,11 @@ assert.throws(()=>buildClassMarksExcelSample({...scope,settings,students:[studen
 assert.throws(()=>buildClassMarksExcelSample({...scope,settings,students:[{...students[0],active:false}]}),/Invalid or inactive/);
 assert.throws(()=>buildClassMarksExcelSample({...scope,settings:{...settings,schoolId:'99999'},students}),/Verified subject examination settings/);
 console.log('V47 class Excel sample: 1500 roster rows, configured component maxima, tenant and duplicate guards');
+
+import {studentDisplayName} from './student-display-name.mjs';
+assert.equal(studentDisplayName({id:'s1',nameEnglish:'Alpha Student'}),'Alpha Student');
+assert.equal(studentDisplayName({id:'s2',nameEnglish:' ',name:'Legacy Name'}),'Legacy Name');
+assert.equal(studentDisplayName({id:'s3',nameEnglish:'English Name',name:'Old Label'}),'English Name');
+assert.equal(studentDisplayName({id:'s4',nameNepali:'विद्यार्थी'}),'विद्यार्थी');
+const named=buildClassMarksExcelSample({...scope,settings,students:[{id:'s1',nameEnglish:'Alpha Student',active:true}]});
+assert.match(new TextDecoder().decode(await named.arrayBuffer()),/Alpha Student/);

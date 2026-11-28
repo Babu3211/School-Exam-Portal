@@ -225,7 +225,9 @@ try{
    const sampleDownload=page.waitForEvent('download',{timeout:30000});
    await page.locator('#teacherExcelSample').click();const sample=await sampleDownload;
    assert.match(sample.suggestedFilename(),/teacher-marks-sample.*\.xlsx$/);
-   assert.match((await readFile(await sample.path())).toString(),/Obtained Learning Achievement \(max 20\)/);
+   const sampleText=(await readFile(await sample.path())).toString();
+   assert.match(sampleText,/Obtained Learning Achievement \(max 20\)/);assert.match(sampleText,/Alpha Student/);
+   assert.equal(await page.locator('#teacherDraftRows tr td').first().textContent(),'Alpha Student');
    const {excelWorkbook}=await import('../excel-workbook.mjs');
    const headers=['Student ID','Student Name','Absent (Yes/No)','No. of Learning Achievement (max 5)','Obtained Learning Achievement (max 20)'];
    async function importTeacherExcel(got){
@@ -235,7 +237,8 @@ try{
    }
    await importTeacherExcel(21);await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Excel कार्य असफल'));
    assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
-   await importTeacherExcel(18);await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Save गरिएको छैन'));
+   await importTeacherExcel(18);await wait(page,()=>/Save गरिएको छैन|Excel कार्य असफल/.test(document.getElementById('teacherDraftStatus').textContent));
+   assert.match(await page.locator('#teacherDraftStatus').textContent(),/Save गरिएको छैन/,'Valid sample import must succeed');
    assert.equal(await page.locator('#saveTeacherDraft').isDisabled(),true);
    assert.equal((await db.doc(teacherDraft).get()).exists,false);
    await page.locator('#inspectTeacherDraft').click();
