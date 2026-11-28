@@ -548,6 +548,10 @@ try{
    await wait(page,()=>document.getElementById('reviewStatus').textContent.includes('नयाँ Admin Draft सुरक्षित भयो'));
    assert.equal((await db.doc(adminDraft).get()).data().revision,1);
    assert.equal((await db.doc(teacherDraft).get()).data().revision,1);
+   await page.locator('#review').click();await wait(page,()=>document.getElementById('adminDraftStatus').textContent.includes('फरक अङ्क भएका विद्यार्थी: 0'));
+   assert.equal(await page.locator('#copyDraft').isDisabled(),true);
+   assert.equal(await page.locator('#exportDraft').isEnabled(),true);
+   assert.equal((await db.doc(adminDraft).get()).data().revision,1);
    assert.deepEqual((await db.doc(legacy).get()).data(),original);
    assert.equal((await db.doc('schools/'+schools[1].sid+'/class_mark_drafts/1_math_final').get()).exists,false);
    assert.deepEqual(errors,[]);

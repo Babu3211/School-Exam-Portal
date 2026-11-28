@@ -244,3 +244,19 @@ assert.match(ui,/where\('classId','==',cl\)/);
 assert.match(ui,/where\('authUid','==',uid\)/);
 assert.match(ui,/m\.role!=='teacher'\|\|m\.active!==true/);
 assert.match(ui,/getDoc:api\.getDocFromServer,getDocs:api\.getDocsFromServer/);
+
+{
+ const {compareAdminDraftToTeacherReview}=await import('./school-admin-teacher-draft-review.mjs');
+ const {prepareCompleteClassDraft}=await import('./complete-class-draft-document.mjs');
+ const f=fixture();
+ f.data.set('schools/'+schoolId+'/students/s1',{schoolId,class:classId,nameEnglish:'English Student',nameNepali:'विद्यार्थी',active:true});
+ const review=await loadSchoolAdminTeacherDraftReview(f.args);
+ assert.equal(review.entries.find(x=>x.studentId==='s1').studentName,'English Student');
+ const prior={...prepareCompleteClassDraft({actor,schoolId,classId,subjectId,examId,settings:{...settings,settingsId:draftId},expectedStudentIds:studentIds,drafts:marks}).data,updatedAt:{seconds:1}};
+ assert.deepEqual(compareAdminDraftToTeacherReview(review,null),{exists:false,valid:true,copyAllowed:true});
+ assert.deepEqual(compareAdminDraftToTeacherReview(review,prior),{exists:true,valid:true,revision:1,differences:0,copyAllowed:false});
+ const changed=structuredClone(prior);changed.entries[0].values.project=14;changed.entries[0].totalObtained=94;
+ assert.deepEqual(compareAdminDraftToTeacherReview(review,changed),{exists:true,valid:true,revision:1,differences:1,copyAllowed:false});
+ assert.deepEqual(compareAdminDraftToTeacherReview(review,{...prior,schoolId:'99999999'}),{exists:true,valid:false,copyAllowed:false});
+ assert.deepEqual(compareAdminDraftToTeacherReview(review,{...prior,entries:[]}),{exists:true,valid:false,copyAllowed:false});
+}

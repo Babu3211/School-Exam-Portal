@@ -5,7 +5,8 @@ import {neError} from './nepali-feedback.mjs';
 import {connectSchoolFirebase,startVerifiedSchoolActivity,enforceSchoolIdle,bindVerifiedModuleActivity} from './school-firebase-client.mjs';
 import {verifySchoolSession} from './verified-school-session.mjs';
 import {validateSchoolId} from './school-paths.mjs';
-import {loadSchoolAdminTeacherDraftReview} from './school-admin-teacher-draft-review.mjs';
+import {loadSchoolAdminTeacherDraftReview,compareAdminDraftToTeacherReview} from './school-admin-teacher-draft-review.mjs';
+import {completeClassDraftId} from './complete-class-draft-document.mjs';
 import {teacherDraftReviewExcel} from './teacher-draft-review-excel.mjs';
 import {readSchoolSubjectCatalog} from './subject-catalog-view.mjs';
 import {studentDisplayName} from './student-display-name.mjs';
@@ -18,7 +19,7 @@ function clearAssignmentChoices(){assignmentRequest++;reviewAssignments=[];$('re
 $('classId').addEventListener('change',clearAssignmentChoices);
 function clearReview(msg=''){
  requestId++;verifiedSelection=null;verifiedRevision=null;verifiedReview=null;$('copyDraft').disabled=true;$('exportDraft').disabled=true;
- $('reviewHeader').replaceChildren();$('reviewRows').replaceChildren();
+ $('reviewHeader').replaceChildren();$('reviewRows').replaceChildren();$('adminDraftStatus').textContent='';
  $('reviewStatus').textContent=msg;
 }
 function clearSession(){
@@ -167,8 +168,12 @@ $('review').onclick=async()=>{
    for(const value of cells){const td=document.createElement('td');td.textContent=value;tr.append(td)}
    rows.append(tr);
   }
+  const target=await api.getDocFromServer(api.doc(db,'schools',id,'class_mark_drafts',completeClassDraftId(selection)));check();
+  await reverifyAdmin(selected.uid,id);check();
+  const comparison=compareAdminDraftToTeacherReview(result,target.exists()?target.data():null);
+  $('adminDraftStatus').textContent=!comparison.exists?'नयाँ Admin Draft बनाउन मिल्छ।':comparison.valid?'Admin Draft Revision '+comparison.revision+' पहिल्यै सुरक्षित छ। फरक अङ्क भएका विद्यार्थी: '+comparison.differences+'। पुरानो Draft बदल्न मिल्दैन।':'पहिलेको Admin Draft हालको विद्यार्थी सूची वा Settings सँग मिलेन। प्रतिलिपि रोकिएको छ।';
   check();$('reviewHeader').append(header);$('reviewRows').append(rows);
-  verifiedSelection=Object.freeze({...selection});verifiedRevision=result.revision;verifiedReview=result;$('copyDraft').disabled=false;
+  verifiedSelection=Object.freeze({...selection});verifiedRevision=result.revision;verifiedReview=result;$('copyDraft').disabled=!comparison.copyAllowed;
   $('exportDraft').disabled=false;
   $('reviewStatus').textContent='प्रमाणित Draft Revision '+result.revision+' · '+result.rosterCount+
    ' विद्यार्थी · '+result.subjectName+' · Read-only, NOT official/published.';
@@ -196,7 +201,7 @@ $('exportDraft').onclick=async()=>{
    db,api:{...api,getDoc:api.getDocFromServer,getDocs:api.getDocsFromServer},auth,actor:selected,schoolId:id,...selection,assertSession:check
   });
   check();
-  if(!fresh.found||fresh.revision!==revision)throw Error('Draft revision changed; review again');
+  if(!fresh.found||fresh.revision!==revision||!sameMarkJson(fresh.entries,verifiedReview.entries)||!sameMarkJson(fresh.components,verifiedReview.components))throw Error('Draft revision changed; review again');
   const file=teacherDraftReviewExcel(fresh);
   check();
   const url=URL.createObjectURL(file.blob),a=document.createElement('a');
@@ -210,7 +215,7 @@ $('exportDraft').onclick=async()=>{
  }finally{busy=false;$('exportDraft').disabled=!verifiedSelection||verifiedRevision===null}
 };
 $('copyDraft').onclick=async()=>{
- if(busy||!actor||!verifiedSelection||!verifiedReview)return;
+ if(busy||!actor||!verifiedSelection||!verifiedReview||$('copyDraft').disabled)return;
  const current=epoch,request=requestId,selected=actor,id=schoolId,selection=verifiedSelection,review=verifiedReview;
  if(!window.confirm('यो शिक्षकको प्रमाणित Draft बाट नयाँ Admin Draft मात्र बनाउने हो। पहिलेको Admin Draft बदलिँदैन। आधिकारिक अङ्क प्रकाशित हुँदैनन्। अगाडि बढ्ने?'))return;
  busy=true;$('copyDraft').disabled=true;$('exportDraft').disabled=true;$('review').disabled=true;
@@ -223,7 +228,7 @@ $('copyDraft').onclick=async()=>{
   if(!fresh.found||fresh.revision!==review.revision||!sameMarkJson(fresh.entries,review.entries)||!sameMarkJson(fresh.components,review.components))throw Error('Teacher Draft changed; review again');
   const result=await saveVerifiedCompleteClassDraft({db,api:serverApi,auth,actor:selected,schoolId:id,classId:selection.classId,subjectId:selection.subjectId,examId:selection.examId,
    drafts:fresh.entries.map(e=>({studentId:e.studentId,isAbsent:e.isAbsent,values:e.isAbsent?{}:e.values})),expectedRevision:0,reviewedTeacher:{teacherUid:selection.teacherUid,revision:fresh.revision,components:fresh.components},assertCurrent:check});
-  check();$('reviewStatus').textContent=result.rosterCount+' विद्यार्थीको नयाँ Admin Draft सुरक्षित भयो। शिक्षकको मूल Draft र आधिकारिक Marks यथावत् छन्।';
+  check();$('adminDraftStatus').textContent='Admin Draft Revision '+result.revision+' सुरक्षित छ। पुरानो Draft बदल्न मिल्दैन।';$('reviewStatus').textContent=result.rosterCount+' विद्यार्थीको नयाँ Admin Draft सुरक्षित भयो। शिक्षकको मूल Draft र आधिकारिक Marks यथावत् छन्।';
  }catch(e){if(current===epoch&&request===requestId)clearReview('प्रतिलिपिको अवस्था पुनः जाँच्नुहोस्: '+neError(e)+'। पहिलेको Admin Draft बदलिएको छैन; Network समस्या भए नयाँ Draft सुरक्षित भइसकेको हुन सक्छ।')}
  finally{busy=false;$('review').disabled=!actor;$('exportDraft').disabled=!verifiedReview;$('copyDraft').disabled=true}
 };

@@ -8,6 +8,9 @@ import {loadCompleteClassRoster} from './complete-class-roster.mjs';
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {validateConfiguredMarkComponents} from './configured-mark-preflight.mjs';
 import {verifyStoredTeacherClassDraft,sameTeacherDraftEntries} from './teacher-class-draft.mjs';
+import {studentDisplayName} from './student-display-name.mjs';
+import {verifyStoredCompleteClassDraft} from './restore-complete-class-draft.mjs';
+import {sameMarkJson} from './mark-json-equality.mjs';
 
 export async function loadSchoolAdminTeacherDraftReview({
  db,api,auth,actor,schoolId,teacherUid,classId,subjectId,examId,assertSession=()=>{}
@@ -111,10 +114,29 @@ export async function loadSchoolAdminTeacherDraftReview({
  const byStudent=new Map(roster.students.map(student=>[student.id,student]));
  const entries=verified.entries.map(entry=>Object.freeze({
   ...entry,values:entry.values?Object.freeze({...entry.values}):null,
-  studentName:String(byStudent.get(entry.studentId)?.name??entry.studentId)
+  studentName:studentDisplayName(byStudent.get(entry.studentId)??{id:entry.studentId})
  }));
  return Object.freeze({found:true,schoolId,teacherUid,classId,subjectId,examId,
   subjectName:duty.subjectName,rosterCount:roster.count,revision:verified.revision,
   components:Object.freeze(components),entries:Object.freeze(entries),
   reviewOnly:true,officialMarksWritten:false,publicationAllowed:false});
+}
+
+// Read-only comparison of an existing Admin Draft against the verified teacher
+// revision. This is never authorization to replace a previously saved Draft.
+export function compareAdminDraftToTeacherReview(review,stored){
+ if(review?.found!==true||review.reviewOnly!==true||review.publicationAllowed!==false||!Array.isArray(review.entries)||review.entries.length!==review.rosterCount)throw Error('Verified Teacher Draft required');
+ if(stored===null)return Object.freeze({exists:false,valid:true,copyAllowed:true});
+ const {schoolId,classId,subjectId,examId}=review;
+ const scope={schoolId,classId,subjectId,examId};
+ const id=completeClassDraftId(scope);
+ try{
+  const restored=verifyStoredCompleteClassDraft({...scope,settings:{...scope,settingsId:id,active:true,components:review.components},expectedStudentIds:review.entries.map(e=>e.studentId),stored});
+  const byId=new Map(restored.entries.map(e=>[e.studentId,e]));
+  const differences=review.entries.filter(row=>{
+   const prior=byId.get(row.studentId);
+   return !prior||row.isAbsent!==prior.isAbsent||!sameMarkJson(row.values,prior.values)||row.totalObtained!==prior.totalObtained;
+  }).length;
+  return Object.freeze({exists:true,valid:true,revision:restored.revision,differences,copyAllowed:false});
+ }catch{return Object.freeze({exists:true,valid:false,copyAllowed:false})}
 }
