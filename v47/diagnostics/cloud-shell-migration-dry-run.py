@@ -125,7 +125,7 @@ def review_orphan_subjects(data):
         sid=val(a,"subjectId");cl=val(a,"classId")
         if not isinstance(sid,str) or not sid or val(a,"schoolId")!=SCHOOL or not isinstance(cl,str) or cl not in CLASSES:
             counts["invalid_assignment_identity"]+=1;continue
-        if sid in target:continue
+        if sid == 'attendance' or sid in target:continue
         original=old.get(sid)
         if original is None:
             counts["original_id_not_in_backup"]+=1;continue

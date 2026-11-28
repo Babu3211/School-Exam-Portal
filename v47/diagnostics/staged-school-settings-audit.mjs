@@ -3,6 +3,7 @@
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
+import {validSchoolClass} from '../class-catalog.mjs';
 import {mkdtemp,writeFile} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {join} from 'node:path';
@@ -198,7 +199,7 @@ export function summarizeRegisteredSubjectCoverage(args){
 }
 function orphanAssignmentCandidates({subjects,assignments}){
  const ids=new Set(subjects.map(r=>r.id));
- return assignments.filter(r=>!ids.has(r.fields.subjectId)).map(r=>{
+ return assignments.filter(r=>r.fields.subjectId!=='attendance'&&!ids.has(r.fields.subjectId)).map(r=>{
   const a=r.fields,labels=[a.subjectName,a.subject].filter(v=>typeof v==='string'&&v.trim());
   const label=labels.length&&new Set(labels.map(norm)).size===1?labels[0]:'';
   const key=label?candidateKey(label,a.classId):null;
@@ -258,13 +259,15 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
   if(typeof a.active!=='boolean')return 'Invalid active flag';
   if(r.id!==[schoolId,a.uid,a.classId,a.subjectId].join(':'))return 'Noncanonical assignment ID';
   if(!m||m.role!=='teacher'||m.uid!==a.uid)return 'Missing or wrong teacher membership';
+  if(!validSchoolClass(a.classId))return 'Invalid assignment class';
+  if(a.subjectId==='attendance')return a.active===true&&m.active!==true?'Teacher membership inactive':'Structurally valid attendance duty';
   if(!s)return 'Missing subject ID';
   if(s.class!==a.classId)return 'Subject registered to different class';
   if(a.active===true&&s.active!==true)return 'Inactive subject';
   if(a.active===true&&m.active!==true)return 'Teacher membership inactive';
   return 'Structurally valid';
  });
- const badAssignments=assignmentReasons.filter(r=>r!=='Structurally valid').length;
+ const badAssignments=assignmentReasons.filter(r=>!['Structurally valid','Structurally valid attendance duty'].includes(r)).length;
  const legacySettings=settings.filter(r=>!recognized.includes(r));
  const legacyMapping=summarizeLegacySettings({schoolId,subjects,settings:legacySettings});
  const legacySubjectCandidates=summarizeLegacySubjectCandidates({schoolId,subjects,settings:legacySettings});

@@ -162,3 +162,12 @@ console.log('PASS duplicate sources: ordered labels and configured maxima, equal
  const file=buildLocalReviewWorkbooks(input);
  assert.match(new TextDecoder().decode(await file.coverageBlob.arrayBuffer()),/Zero achievement placeholder/);
 }
+
+{
+ const duty=row('12345:teacher:9:attendance',{uid:'teacher',classId:'9',subjectId:'attendance',active:true});
+ const r=summarizeStagedSettings({...args,assignments:[duty]});
+ assert.equal(r.invalidAssignmentRecords,0);assert.equal(r.assignmentReviewReasons['Structurally valid attendance duty'],1);assert.deepEqual(r.orphanAssignmentReview,{});
+ assert.equal(buildLocalReviewWorkbooks({...args,assignments:[duty]}).assignmentRows,0);
+ const inactive={...args,members:[members[0],{...members[1],fields:{...members[1].fields,active:false}}],assignments:[duty]};
+ assert.equal(summarizeStagedSettings(inactive).invalidAssignmentRecords,1);
+}

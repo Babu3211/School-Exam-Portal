@@ -222,6 +222,22 @@ try{
    assert.equal(await page.locator('#teacherDraftRows tr').count(),1,'Teacher draft load: '+await page.locator('#teacherDraftStatus').textContent()+'; browser errors: '+errors.join('; '));
    assert.equal(await page.locator('#teacherDraftRows input[data-component="count"]').inputValue(),'5');
    assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
+   const sampleDownload=page.waitForEvent('download',{timeout:30000});
+   await page.locator('#teacherExcelSample').click();const sample=await sampleDownload;
+   assert.match(sample.suggestedFilename(),/teacher-marks-sample.*\.xlsx$/);
+   assert.match((await readFile(await sample.path())).toString(),/Obtained Learning Achievement \(max 20\)/);
+   const {excelWorkbook}=await import('../excel-workbook.mjs');
+   const headers=['Student ID','Student Name','Absent (Yes/No)','No. of Learning Achievement (max 5)','Obtained Learning Achievement (max 20)'];
+   async function importTeacherExcel(got){
+    const file=excelWorkbook(headers,[['s1','Alpha Student','No',5,got]],{sheetName:'Marks Entry Sample'});
+    await page.locator('#teacherExcelFile').setInputFiles({name:'marks.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:Buffer.from(await file.arrayBuffer())});
+    await page.locator('#teacherExcelImport').click();
+   }
+   await importTeacherExcel(21);await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Excel कार्य असफल'));
+   assert.equal(await page.locator('#teacherDraftRows input[data-component="got"]').inputValue(),'18');
+   await importTeacherExcel(18);await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Save गरिएको छैन'));
+   assert.equal(await page.locator('#saveTeacherDraft').isDisabled(),true);
+   assert.equal((await db.doc(teacherDraft).get()).exists,false);
    await page.locator('#inspectTeacherDraft').click();
    page.once('dialog',d=>d.accept());await page.locator('#saveTeacherDraft').click();
    await wait(page,()=>document.getElementById('teacherDraftStatus').textContent.includes('Revision 1 सुरक्षित'));

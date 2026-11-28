@@ -1,3 +1,5 @@
+import {readSmssMarksExcel} from './import-class-marks-excel.mjs';
+import {buildClassMarksExcelSample} from './class-marks-excel-sample.mjs';
 import {prepareLegacyDraftPrefill} from './legacy-draft-prefill.mjs';
 import {loadAssignedLegacyMarks} from './assigned-legacy-marks.mjs';
 import {neError} from './nepali-feedback.mjs';
@@ -140,6 +142,7 @@ function clearTeacherDraft(){
  $('teacherDraftRows').replaceChildren();$('teacherDraftHeader').replaceChildren();
  $('teacherDraftStatus').textContent='';
  $('inspectTeacherDraft').disabled=true;$('saveTeacherDraft').disabled=true;
+ $('teacherExcelFile').value='';$('teacherExcelFile').disabled=true;$('teacherExcelImport').disabled=true;$('teacherExcelSample').disabled=true;
 }
 function lockTeacherDraft(value){
  $('teacherDraftArea').hidden=!actor;
@@ -148,6 +151,7 @@ function lockTeacherDraft(value){
  $('loadTeacherDraft').disabled=value||!actor||!$('subjectId').value;
  $('inspectTeacherDraft').disabled=value||!draftContext;
  $('saveTeacherDraft').disabled=value||!draftContext||!draftInspected;
+ $('teacherExcelFile').disabled=value||!draftContext;$('teacherExcelSample').disabled=value||!draftContext;$('teacherExcelImport').disabled=value||!draftContext||!$('teacherExcelFile').files?.length;
  for(const input of $('teacherDraftRows').querySelectorAll('input'))input.disabled=value||
   (input.matches('input[data-component]')&&input.closest('tr')?.querySelector('input[data-absent]')?.checked===true);
 }
@@ -285,6 +289,58 @@ $('loadTeacherDraft').onclick=async()=>{
     ' सबै अंक भरेपछि Validate गर्नुहोस्। यो आधिकारिक नतिजा होइन।';
  }catch(e){if(current===draftEpoch&&request===epoch){clearTeacherDraft();$('teacherDraftStatus').textContent='Teacher Draft खोल्न सकिएन ('+stage+'): '+neError(e)}}
  finally{if(request===epoch)lock(false)}
+};
+// Reuse the existing Admin XLSX sample/parser. The teacher must still have a
+// fresh verified assignment, settings and complete roster. Import is local only.
+async function withTeacherExcel(action){
+ if(busy||!draftContext||actor?.role!=='teacher'||auth?.currentUser?.uid!==actor.uid)return;
+ const c=draftContext,member=actor,request=epoch,current=draftEpoch;
+ const check=()=>{if(epoch!==request||draftEpoch!==current||draftContext!==c||actor!==member||auth.currentUser?.uid!==member.uid||schoolId!==c.schoolId||$('classId').value!==c.classId||$('subjectId').value!==c.subjectId||$('draftTerm').value!==c.examId)throw Error('Teacher session or selection changed')};
+ const serverApi={...api,getDoc:api.getDocFromServer,getDocs:api.getDocsFromServer};
+ const revalidate=async()=>{check();const session=await verifySchoolSession({schoolId:c.schoolId,uid:member.uid,readDocument:async path=>{const snap=await serverApi.getDoc(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null}});check();if(session.role!=='teacher')throw Error('Teacher membership changed')};
+ lock(true);
+ try{
+  if(!await enforceSchoolIdle(auth,authSdk))throw Error('Teacher session expired');
+  await verifyTeacherSubjectAssignment({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,revalidate});
+  const settings=await discoverVerifiedSubjectExamSettings({db,api:serverApi,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,examId:c.examId,revalidate});
+  const roster=await loadCompleteClassRoster({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId});
+  const names=new Map(c.students.map(s=>[s.id,String(s.name??s.id)]));
+  if(settings.settingsId!==c.settings.settingsId||JSON.stringify(settings.components)!==JSON.stringify(c.settings.components)||roster.count!==c.students.length||roster.students.some(s=>!isActiveEnrolledStudent(s)||names.get(s.id)!==String(s.name??s.id)))throw Error('Roster or settings changed; reload');
+  await verifyTeacherSubjectAssignment({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,revalidate});
+  check();
+  await action({c,settings,roster,check,revalidate:async()=>{await verifyTeacherSubjectAssignment({db,api:serverApi,actor:member,schoolId:c.schoolId,classId:c.classId,subjectId:c.subjectId,revalidate});check()}});
+ }catch(e){if(epoch===request&&draftEpoch===current)$('teacherDraftStatus').textContent='Excel कार्य असफल: '+neError(e)}
+ finally{if(epoch===request)lock(false)}
+}
+$('teacherExcelFile').onchange=()=>{if(!busy)lockTeacherDraft(false)};
+$('teacherExcelSample').onclick=()=>withTeacherExcel(async({c,settings,check})=>{
+ const blob=buildClassMarksExcelSample({...c,settings,students:c.students});check();
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download=['smss-v47-teacher-marks-sample',c.schoolId,c.classId,c.subjectId,c.examId].join('-')+'.xlsx';
+ document.body.append(link);try{link.click()}finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+ $('teacherDraftStatus').textContent='Excel Sample डाउनलोड भयो। कुनै अङ्क सुरक्षित गरिएको छैन।';
+});
+$('teacherExcelImport').onclick=()=>{
+ const file=$('teacherExcelFile').files?.[0];if(!file)return;
+ return withTeacherExcel(async({c,settings,roster,check,revalidate})=>{
+  const drafts=await readSmssMarksExcel(file,{...c,settings,students:roster.students});
+  const result=inspectConfiguredClassMarks({...c,settings,expectedStudentIds:roster.studentIds,drafts});
+  if(!result.complete)throw Error('Excel marks incomplete or invalid');
+  await revalidate();check();
+  // Collect every destination before changing any row. Failed import leaves
+  // existing edits untouched, and success still requires Validate and Save.
+  const byId=new Map(drafts.map(d=>[d.studentId,d]));
+  const rows=[...$('teacherDraftRows').children];
+  if(rows.length!==byId.size||new Set(rows.map(r=>r.dataset.studentId)).size!==byId.size)throw Error('Student rows changed');
+  const targets=rows.map(row=>{
+   const draft=byId.get(row.dataset.studentId),absent=row.querySelector('input[data-absent]'),inputs=[...row.querySelectorAll('input[data-component]')];
+   if(!draft||!absent||inputs.length!==settings.components.length||new Set(inputs.map(i=>i.dataset.component)).size!==inputs.length||inputs.some(i=>!settings.components.some(s=>s.key===i.dataset.component)))throw Error('Invalid marks destination');
+   return {draft,absent,inputs};
+  });
+  for(const {draft,absent,inputs} of targets){absent.checked=draft.isAbsent;for(const input of inputs){input.value=draft.isAbsent?'':String(draft.values[input.dataset.component]);input.disabled=draft.isAbsent}}
+  draftInspected=false;
+  $('teacherDraftStatus').textContent='Excel बाट '+drafts.length+' विद्यार्थीका अङ्क भरिए। पुनः Validate गर्नुहोस्। Save गरिएको छैन।';
+ });
 };
 $('inspectTeacherDraft').onclick=()=>{
  if(busy||!draftContext||!actor||actor.uid!==auth?.currentUser?.uid)return;
