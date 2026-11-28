@@ -719,6 +719,34 @@ try{
     assert.deepEqual(await page.locator('#classMarkHeader th').allTextContents(),['Student','Absent','Assessment / 137.5','Project / 62.5']);
     const assessment=page.locator('#classMarkRows input[data-field="assessment"]'),project=page.locator('#classMarkRows input[data-field="project"]');
     assert.equal(await assessment.getAttribute('max'),'137.5');assert.equal(await project.getAttribute('max'),'62.5');
+    // Actual browser prefill against isolated migrated records. Never write
+    // original marks or replace a nonblank Admin form or saved Draft.
+    const prefillPath=root+'/marks/browser_admin_prefill',foreignPrefillPath='schools/'+schools[1].sid+'/marks/browser_admin_prefill';
+    const matching={...original,term:'1st',termKey:'first',examId:'1st',scores:[{name:'Assessment',fullMarks:137.5,obtained:0},{name:'Project',fullMarks:62.5,obtained:62.5}],totalFullMarks:200,totalObtained:62.5};
+    const mismatch={...matching,scores:[{name:'Assessment',fullMarks:138,obtained:0},matching.scores[1]],totalFullMarks:200.5};
+    const foreignMark={...matching,schoolId:schools[1].sid,scores:[{name:'Assessment',fullMarks:137.5,obtained:137.5},matching.scores[1]],totalObtained:200};
+    assert.equal((await db.doc(prefillPath).get()).exists,false);
+    assert.equal((await db.doc(foreignPrefillPath).get()).exists,false);
+    try{
+     await db.doc(prefillPath).set(mismatch);await db.doc(foreignPrefillPath).set(foreignMark);
+     await page.locator('#prefillAdminLegacy').click();
+     await wait(page,()=>document.getElementById('adminLegacyStatus').textContent.includes('0 विद्यार्थीको अङ्क भरियो'));
+     assert.equal(await assessment.inputValue(),'');assert.equal(await project.inputValue(),'');
+     await db.doc(prefillPath).set(matching);
+     await assessment.fill('17');
+     await page.locator('#prefillAdminLegacy').click();
+     assert.match(await page.locator('#adminLegacyStatus').textContent(),/फाराममा पहिले नै अङ्क छन्/);
+     assert.equal(await assessment.inputValue(),'17');assert.equal(await project.inputValue(),'');
+     await assessment.fill('');
+     await page.locator('#prefillAdminLegacy').click();
+     await wait(page,()=>document.getElementById('adminLegacyStatus').textContent.includes('1 विद्यार्थीको अङ्क भरियो'));
+     assert.equal(await assessment.inputValue(),'0');assert.equal(await project.inputValue(),'62.5');
+     assert.equal(await page.locator('#saveClassDraft').isDisabled(),true);
+     assert.equal((await db.doc(customDraftPath).get()).exists,false);
+     assert.deepEqual((await db.doc(prefillPath).get()).data(),matching);
+     assert.deepEqual((await db.doc(foreignPrefillPath).get()).data(),foreignMark);
+     console.log('PASS Admin V46 prefill browser: mismatched maxima refused, edits preserved, zero and decimal marks restored, no Draft created, foreign school unchanged');
+    }finally{await Promise.all([prefillPath,foreignPrefillPath].map(p=>db.doc(p).delete()))}
     const sampleDownload=page.waitForEvent('download',{timeout:30000});await page.locator('#downloadClassTemplateExcel').click();const sample=await sampleDownload;
     const sampleBytes=(await readFile(await sample.path())).toString();assert.match(sampleBytes,/137.5/);assert.match(sampleBytes,/62.5/);
     await assessment.fill('138');await project.fill('62.5');await page.locator('#inspectClassMarks').click();
@@ -791,6 +819,7 @@ try{
    await page.locator('#loadClassMarks').click();
    await wait(page,()=>!document.getElementById('serverReviewMarks').disabled);
    assert.match(await page.locator('#classDraftStatus').textContent(),/Revision 1 restored/);
+   assert.equal(await page.locator('#prefillAdminLegacy').isDisabled(),true,'Saved Admin Draft cannot be replaced by V46 prefill');
    // Unsaved UI edits must not become published marks.
    await page.locator('#classMarkRows input[data-field="got"]').fill('1');
    const dialogs=[];
