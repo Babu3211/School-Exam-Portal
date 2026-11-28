@@ -24,7 +24,7 @@ def indexed(rows,prefix):
         if not n.startswith(prefix+"/") or not n[len(prefix)+1:] or "/" in n[len(prefix)+1:] or n in out or not d.get("updateTime"):raise ValueError("Invalid inventory identity")
         out[n]=d
     return out
-def select_changes(expected,members,assignments):
+def select_changes(expected,members,assignments,held_details=None,plan_reasons=None):
     writes=[];counts=Counter()
     byuid={}
     for n,d in assignments.items():
@@ -38,8 +38,20 @@ def select_changes(expected,members,assignments):
         if role not in ("teacher","viewer"):raise ValueError("Unexpected membership role")
         planned={k:v for k,v in expected.get(uid,{}).items()}
         actual={n:d,**{k:assignments[k] for k in byuid.get(uid,set())}}
-        if not planned or set(planned)!=set(actual):counts["held_identity_or_duties"]+=1;continue
-        if any(type(scalar(x["fields"],"active")) is not bool or {k:v for k,v in x["fields"].items() if k!="active"}!={k:v for k,v in planned[key].items() if k!="active"} for key,x in actual.items()):counts["held_field_mismatch"]+=1;continue
+        if not planned or set(planned)!=set(actual):
+            counts["held_identity_or_duties"]+=1
+            if held_details is not None:
+                if not planned:
+                    labels=(plan_reasons or {}).get(uid,["no matching live source account"])
+                    held_details.update(labels or ["no verified current role plan"])
+                else:
+                    if set(planned)-set(actual):held_details["missing staged duty records"]+=1
+                    if set(actual)-set(planned):held_details["additional staged duty records"]+=1
+            continue
+        if any(type(scalar(x["fields"],"active")) is not bool or {k:v for k,v in x["fields"].items() if k!="active"}!={k:v for k,v in planned[key].items() if k!="active"} for key,x in actual.items()):
+            counts["held_field_mismatch"]+=1
+            if held_details is not None:held_details["staged role or duty fields differ"]+=1
+            continue
         counts["verified_"+role]+=1
         for key,x in actual.items():
             if scalar(x["fields"],"active") is True:counts["already_active_records"]+=1;continue
@@ -77,6 +89,15 @@ def self_test():
     assert all(x["updateMask"]["fieldPaths"]==["active"] for x in w)
     assert not select_changes(exp,{n:doc(f)},{})[0]
     assert not select_changes({}, {n:doc(f)},{a:doc(af)})[0]
+    reasons=Counter()
+    assert not select_changes({}, {n:doc(f)},{a:doc(af)},reasons,{u:["subject assignments held"]})[0]
+    assert reasons=={"subject assignments held":1}
+    reasons=Counter()
+    assert not select_changes(exp,{n:doc(f)},{},reasons,{})[0]
+    assert reasons=={"missing staged duty records":1}
+    reasons=Counter()
+    assert not select_changes(exp,{n:doc(dict(f,role=s("viewer")))},{a:doc(af)},reasons,{})[0]
+    assert reasons=={"staged role or duty fields differ":1}
     assert not select_changes(exp,{n:doc(dict(f,role=s("viewer")))},{a:doc(af)})[0]
     msg=api_error_summary(SOURCE,"https://identitytoolkit.googleapis.com/v1/projects/"+SOURCE+"/accounts:batchGet",429,{"error":{"status":"RESOURCE_EXHAUSTED","message":"private data","details":[{"reason":"RATE_LIMIT_EXCEEDED"}]}})
     assert msg=="V46 Auth inventory: HTTP 429 (RESOURCE_EXHAUSTED RATE_LIMIT_EXCEEDED)" and "private" not in msg
@@ -84,7 +105,7 @@ def self_test():
     print("PASS exact staged roles and duties, missing/mismatched held, active-only writes and sanitized API diagnostics")
 def main():
     if sys.argv[1:]==["--self-test"]:return self_test()
-    if sys.argv[1:] not in (["--review"],["--apply"]):raise ValueError("Choose review or apply")
+    if sys.argv[1:] not in (["--review"],["--held-review"],["--apply"]):raise ValueError("Choose review, held-review or apply")
     if os.getenv("CI") or os.getenv("GITHUB_ACTIONS") or os.getenv("FIRESTORE_EMULATOR_HOST") or os.getenv("FIREBASE_AUTH_EMULATOR_HOST") or os.getenv("V47_CONFIRM_PROJECT")!=TARGET:raise ValueError("Explicit V47 Cloud Shell operator required")
     spec=importlib.util.spec_from_file_location("roleplan",Path.home()/ "smss-role-plan.py")
     planner=importlib.util.module_from_spec(spec);spec.loader.exec_module(planner)
@@ -124,7 +145,7 @@ def main():
         if len(files)!=1:return False
         raw=files[0]["content"].encode()
         return hashlib.sha1(("blob "+str(len(raw))+"\\0").encode().replace(b"\\0",b"\x00")+raw).hexdigest()==RULES_BLOB
-    def snapshot():
+    def snapshot(explain=False):
         school=call(TARGET,FS+BASE)
         if school.get("name")!=BASE or scalar(school["fields"],"id")!=SID or scalar(school["fields"],"active") is not True:raise ValueError("Canonical active school required")
         src=users(SOURCE);dst=users(TARGET)
@@ -149,19 +170,26 @@ def main():
             catalog[key]=n.rsplit("/",1)[1]
         roles=docs(SOURCE,"user_roles",300);assignments=docs(TARGET,"schools/"+SID+"/teacher_assignments",1000)
         expected={}
+        plan_reasons={}
+        allowed_reasons={"invalid UID","collision or missing target identity","disabled account held","admin held for explicit authorization","missing or inactive role","mixed or unsupported roles held","class assignments held","subject assignments held"}
         for u in src:
             uid=u["localId"]
             rr=[d for n,d in roles.items() if n.rsplit("/",1)[1]==uid]
             out,held=planner.plan([u],dst,rr,catalog,superuids,source_admin[0])
+            plan_reasons[uid]=sorted(k for k,v in held.items() if v and k in allowed_reasons)
             if any("assignments held" in k and v for k,v in held.items()):continue
             if out:expected[uid]=out
-        w,c=select_changes(expected,members,assignments)
+        details=Counter() if explain else None
+        w,c=select_changes(expected,members,assignments,details,plan_reasons)
+        if explain:
+            print("HELD ACCOUNT REASONS (aggregate; categories may overlap):",json.dumps(dict(details),sort_keys=True))
+            print("READ ONLY; V46 WRITES: ZERO; V47 WRITES: ZERO; AUTH CHANGES: ZERO")
         return w,c
     ok=rules_match()
     print("LIVE RULES MATCH REVIEWED V47:",ok,flush=True)
-    w,c=snapshot()
+    w,c=snapshot(explain=sys.argv[1:]==["--held-review"])
     print("EXISTING ROLE REVIEW:",json.dumps(c,sort_keys=True))
-    if sys.argv[1]=="--review":return
+    if sys.argv[1:] in (["--review"],["--held-review"]):return
     if not ok:raise ValueError("Deployed rules differ; activation blocked")
     if len(w)>200:raise ValueError("Write cap")
     if not w:print("NO ELIGIBLE INACTIVE RECORDS; ZERO WRITES");return
