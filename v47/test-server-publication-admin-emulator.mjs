@@ -229,21 +229,23 @@ try{
  };
  await runHttpClient(false,async(opts,requests)=>{
   const before=(await db.collection(path('marks_staging')).get()).size;
-  await assert.rejects(runSavedClassPublication(opts),/503/);
-  assert.equal(requests.length,2);assert.equal((await pointerRef.get()).data().publicationId,stageHttpId);
+  const reviewed=await runSavedClassPublication({...opts,confirmStage:()=>assert.fail('Disabled runtime must not prompt for staging'),confirmCommit:()=>assert.fail('Disabled runtime must not prompt for final commit')});
+  assert.deepEqual(reviewed,{committed:false,reviewOnly:true,rosterCount:count});
+  assert.deepEqual(requests,['/api/v47/runtime-status','/api/v47/publication-review?'+new URLSearchParams(scope)]);assert.equal((await pointerRef.get()).data().publicationId,stageHttpId);
   assert.equal((await db.collection(path('marks_staging')).get()).size,before,'Disabled final publication must not create orphan staged manifests');
  });
  let latestPublication;
  await runHttpClient(true,async(opts,requests)=>{
   const cancelled=await runSavedClassPublication({...opts,confirmStage:()=>false});
-  assert.equal(cancelled.committed,false);assert.equal(requests.length,1);
+  assert.equal(cancelled.committed,false);assert.deepEqual(requests,['/api/v47/runtime-status','/api/v47/publication-review?'+new URLSearchParams(scope)]);
   const published=await runSavedClassPublication({...opts,confirmCommit:info=>{
    assert.equal(info.previousPublicationId,stageHttpId);assert.equal(info.review.rosterCount,count);return true
   }});
   assert.equal(published.committed,true);latestPublication=published.publicationId;
-  assert.equal(requests.length,4);assert.equal((await pointerRef.get()).data().publicationId,latestPublication);
+  assert.deepEqual(requests.slice(2),['/api/v47/runtime-status','/api/v47/publication-review?'+new URLSearchParams(scope),'/api/v47/publication/stage','/api/v47/publication/commit']);assert.equal((await pointerRef.get()).data().publicationId,latestPublication);
   assert.equal((await loadCommittedOfficialClassMarks({firestore:db,...scope,actorUid})).rosterCount,count);
-  await assert.rejects(runSavedClassPublication({...opts,getIdToken:async()=>'viewer1'}),/403/);
+  await assert.rejects(runSavedClassPublication({...opts,getIdToken:async()=>'viewer1',confirmStage:()=>assert.fail('Viewer must not reach staging')}),/403/);
+  assert.deepEqual(requests.slice(6),['/api/v47/runtime-status','/api/v47/publication-review?'+new URLSearchParams(scope)]);
   assert.equal((await pointerRef.get()).data().publicationId,latestPublication);
  });
  console.log('PASS actual HTTP browser publication client: review/stage/commit, disabled default, CAS pointer, cancellation and denied Viewer');
