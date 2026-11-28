@@ -76,3 +76,28 @@ import {buildLocalReviewWorkbooks} from './diagnostics/staged-school-settings-au
  assert.match(assignmentXML,/Missing subject ID/);assert.match(assignmentXML,/Computer/);
  assert.throws(()=>buildLocalReviewWorkbooks({...input,settings:[{...legacy,fields:{...legacy.fields,schoolId:'99999'}}]}),/foreign/);
 }
+
+import {summarizeTermCompatibility} from './diagnostics/staged-school-settings-audit.mjs';
+{
+ const termSubject=row('c9',{class:'9',name:'Computer',active:true});
+ const termSettings=row('oldc9',{classGroup:'9-10',className:'9',subject:'Computer',components:[{name:'Participation',fullMarks:4},{name:'Practical/Project',fullMarks:36},{name:'First Term Examination',fullMarks:10}]});
+ const input={schoolId,subjects:[termSubject],settings:[termSettings]};
+ const report=summarizeTermCompatibility(input);
+ assert.equal(report.distinctSingleSourceSubjects,1);
+ assert.equal(report.byTerm['1st']['Schema compatible'],1);
+ assert.equal(report.byTerm['2nd']['Schema compatible'],1);
+ assert.equal(report.byTerm.final['Component mismatch'],1);
+ assert.equal(report.termAssigned,false);assert.equal(report.writeAuthorized,false);
+ const conflicting=summarizeTermCompatibility({...input,settings:[termSettings,{...termSettings,id:'oldc9b'}]});
+ assert.equal(conflicting.conflictingTargets,1);assert.equal(conflicting.distinctSingleSourceSubjects,0);
+ const annual={...termSettings,fields:{...termSettings.fields,components:[...termSettings.fields.components,{name:'TH (Theory)',fullMarks:50}]}};
+ const ar=summarizeTermCompatibility({...input,settings:[annual]});
+ assert.equal(ar.byTerm.final['Schema compatible'],1);assert.equal(ar.byTerm['1st']['Component mismatch'],1);
+ const primarySubject=row('p1',{class:'1',name:'Mathematics',active:true});
+ const primarySetting=row('p1old',{classGroup:'1-3',className:'1',subject:'गणित',components:[{name:'No. of Learning Achievement',fullMarks:3},{name:'Full Marks',fullMarks:12},{name:'Obtained Learning Achievement',fullMarks:12}]});
+ const pr=summarizeTermCompatibility({schoolId,subjects:[primarySubject],settings:[primarySetting]});
+ assert.equal(pr.byTerm.final['Schema compatible'],1);
+ assert.equal(pr.byTerm['1st']['Schema compatible'],1);
+ const bad={...termSettings,fields:{...termSettings.fields,components:[{name:'Participation',fullMarks:5},{name:'Practical/Project',fullMarks:36},{name:'First Term Examination',fullMarks:10}]}};
+ assert.equal(summarizeTermCompatibility({...input,settings:[bad]}).noCompatibleTerm,1);
+}

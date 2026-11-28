@@ -7,7 +7,8 @@ import {mkdtemp,writeFile} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {join} from 'node:path';
 import {excelWorkbook} from '../excel-workbook.mjs';
-import {auditAllTermSettingsCoverage} from '../entry-settings-coverage.mjs';
+import {auditAllTermSettingsCoverage,auditEntrySettingsCoverage} from '../entry-settings-coverage.mjs';
+import {prepareNewSubjectExamSettings} from '../create-subject-exam-settings.mjs';
 import {previewV46MarkSettingsMigration} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
 import {iemisSubjectKey} from '../iemis-ledger.js';
@@ -92,6 +93,40 @@ export function summarizeLegacySubjectCandidates(args){
  }
  return {records:counts.length,classification:countBy(counts,r=>r.kind),componentShapeValid:counts.reduce((n,r)=>n+r.validComponents,0),distinctValidatedTargetSubjects:targetCounts.size,conflictingTargetSubjects:[...targetCounts.values()].filter(n=>n>1).length,byClass:classCounts,termAssigned:false,writeAuthorized:false};
 }
+// Preview a term-specific canonical settings shape without authorizing that
+// term. The original source components/maxima are preserved; the primary
+// derived Full Marks column is omitted only in the candidate schema.
+function termCompatibility(row,schoolId,examId){
+ const target=row.candidates[0],classId=target.fields.class,subjectId=target.id;
+ const legacy={...row.legacy,subject:target.fields.name,...(row.bucket!=='group or unknown'?{className:row.bucket}:{})};
+ const args={legacy,schoolId,classId,subjectId,examId,verifiedSubjectName:target.fields.name};
+ try{
+  let components;
+  if(Number(classId)<=5){
+   const p=previewV46PrimaryAchievementSettings(args);
+   components=[{key:'count',name:'No. of Learning Achievement',fullMarks:p.learningAchievementCount},{key:'obtained',name:'Obtained Learning Achievement',fullMarks:p.obtainedAchievementMaximum}];
+  }else{
+   components=previewV46MarkSettingsMigration(args).settings.components;
+  }
+  const settings=prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId,components});
+  const audit=auditEntrySettingsCoverage({schoolId,classId,examId,subjects:[{id:subjectId,name:target.fields.name,active:true}],settings:[settings]});
+  return audit.rows[0].status==='Schema match'?'Schema compatible':'Component mismatch';
+ }catch{return 'Invalid candidate settings'}
+}
+export function summarizeTermCompatibility({schoolId,subjects,settings}){
+ const rows=legacyCandidateRows({schoolId,subjects,settings});
+ const byTarget=new Map();
+ for(const row of rows)if(row.kind.startsWith('Unique ')&&row.validComponents===1&&row.candidates.length===1){
+  const id=row.candidates[0].id,group=byTarget.get(id)??[];group.push(row);byTarget.set(id,group);
+ }
+ // A collision is not resolved by picking the first or last record.
+ const unique=[...byTarget.values()].filter(g=>g.length===1).map(g=>g[0]);
+ const details=unique.map(row=>({row,statuses:Object.fromEntries(terms.map(t=>[t,termCompatibility(row,schoolId,t)]))}));
+ const byTerm=Object.fromEntries(terms.map(t=>[t,countBy(details,r=>r.statuses[t])]));
+ return {distinctSingleSourceSubjects:unique.length,conflictingTargets:[...byTarget.values()].filter(g=>g.length>1).length,byTerm,
+  noCompatibleTerm:details.filter(r=>terms.every(t=>r.statuses[t]!=='Schema compatible')).length,
+  termAssigned:false,writeAuthorized:false,iemisVerified:false};
+}
 export function summarizeLegacySettings({schoolId,subjects,settings}){
  const results=[];
  for(const row of settings){
@@ -152,7 +187,7 @@ export function summarizeStagedSettings({schoolId,school,subjects,settings,membe
  const legacySettings=settings.filter(r=>!recognized.includes(r));
  const legacyMapping=summarizeLegacySettings({schoolId,subjects,settings:legacySettings});
  const legacySubjectCandidates=summarizeLegacySubjectCandidates({schoolId,subjects,settings:legacySettings});
- return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,legacySubjectCandidates,matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
+ return {schoolActive:school.active,activeClassSubjects:activeSubjects.length,totalSettings:settings.length,recognizedEntrySettings:recognized.length,settingsIdentityMismatches:idMismatch,otherOrLegacySettings:settings.length-recognized.length,matchedClassTermSubjects:matrix.reduce((n,r)=>n+r.matched,0),reviewClassTermSubjects:matrix.reduce((n,r)=>n+r.reviewRequired,0),members:members.length,activeAdmins:members.filter(r=>r.fields.role==='school_admin'&&r.fields.active===true&&r.fields.uid===r.id).length,invalidMemberRecords:badMembers,teacherAssignments:assignments.length,invalidAssignmentRecords:badAssignments,assignmentReviewReasons:countBy(assignmentReasons,r=>r),legacyMapping,legacySubjectCandidates,termCompatibility:summarizeTermCompatibility({schoolId,subjects,settings:legacySettings}),matrix,writeAuthorized:false,liveIemisVerified:false,activationAuthorized:false};
 }
 // Optional private operator workbooks. No student records, scores, email,
 // passwords, tokens, or raw data dumps; CI never creates these files.
@@ -171,10 +206,11 @@ export function buildLocalReviewWorkbooks(inputs){
  for(const r of candidates){
   const d=r.legacy;
   const choices=r.candidates.length?r.candidates:[null];
+  const status=Object.fromEntries(terms.map(t=>[t,r.kind.startsWith('Unique ')&&r.validComponents===1&&r.candidates.length===1&&(targetCounts.get(r.candidates[0].id)??0)===1?termCompatibility(r,schoolId,t):'Review required']));
   if(rows.length+choices.length>50000)throw Error('Private review row limit exceeded');
-  for(const choice of choices)rows.push([schoolId,r.id,str(d.classGroup),r.bucket,str(d.subject),components(d),r.kind,r.validComponents===1?'Shape valid':'Review required',choice?.fields.class??'',choice?.id??'',choice?.fields.name??'',choice&&(targetCounts.get(choice.id)??0)>1?'Conflicting legacy records':'','', 'Review only; no term or write approved']);
+  for(const choice of choices)rows.push([schoolId,r.id,str(d.classGroup),r.bucket,str(d.subject),components(d),r.kind,r.validComponents===1?'Shape valid':'Review required',choice?.fields.class??'',choice?.id??'',choice?.fields.name??'',choice&&(targetCounts.get(choice.id)??0)>1?'Conflicting legacy records':'',...terms.map(t=>status[t]),'', 'Review only; no term or write approved']);
  }
- const settingsBlob=excelWorkbook(['School ID','Legacy settings ID','Class group','Legacy class','Legacy subject','Saved component maxima','Candidate status','Component check','Candidate class','Candidate subject ID','Candidate subject','Target conflict','Approved term (operator review only)','Notice'],rows,{sheetName:'Legacy mapping review'});
+ const settingsBlob=excelWorkbook(['School ID','Legacy settings ID','Class group','Legacy class','Legacy subject','Saved component maxima','Candidate status','Component check','Candidate class','Candidate subject ID','Candidate subject','Target conflict','1st schema','2nd schema','3rd schema','Final schema','Approved term (operator review only)','Notice'],rows,{sheetName:'Legacy mapping review'});
  const subjectIds=new Set(subjects.map(r=>r.id));
  const assignmentRows=assignments.filter(r=>!subjectIds.has(r.fields.subjectId)).map(r=>{
   const a=r.fields,labels=[a.subjectName,a.subject].filter(v=>typeof v==='string'&&v.trim()),label=labels.length&&new Set(labels.map(norm)).size===1?labels[0]:'';
