@@ -820,6 +820,38 @@ try{
    await wait(page,()=>!document.getElementById('serverReviewMarks').disabled);
    assert.match(await page.locator('#classDraftStatus').textContent(),/Revision 1 restored/);
    assert.equal(await page.locator('#prefillAdminLegacy').isDisabled(),true,'Saved Admin Draft cannot be replaced by V46 prefill');
+   // The actual Spark Preview has no Node API. Test both a static HTML
+   // fallback and a genuine read-only runtime before the enabled emulator.
+   const runtimePattern='**/api/v47/runtime-status';
+   const blockedRequests=[],blockedDialogs=[];
+   const captureRequest=req=>{if(new URL(req.url()).pathname.startsWith('/api/v47/'))blockedRequests.push({method:req.method(),path:new URL(req.url()).pathname,hasAuthorization:!!req.headers().authorization})};
+   const refuseUnexpectedDialog=async dialog=>{blockedDialogs.push(dialog.message());await dialog.dismiss()};
+   const draftBeforeBlocked=(await db.doc(adminDraft).get()).data();
+   const pointerBeforeBlocked=(await db.doc(pointerPath).get()).data();
+   const publicationCountBefore=(await db.collection(root+'/official_marks_publications').count().get()).data().count;
+   const verifyBlockedUnchanged=async()=>{
+    assert.deepEqual((await db.doc(adminDraft).get()).data(),draftBeforeBlocked);
+    assert.deepEqual((await db.doc(pointerPath).get()).data(),pointerBeforeBlocked);
+    assert.equal((await db.collection(root+'/official_marks_publications').count().get()).data().count,publicationCountBefore);
+    assert.deepEqual((await db.doc(otherPointer).get()).data(),otherBefore);
+    assert.deepEqual(blockedDialogs,[]);
+   };
+   page.on('request',captureRequest);page.on('dialog',refuseUnexpectedDialog);
+   try{
+    await page.route(runtimePattern,route=>route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>Static Hosting</title>'}));
+    await page.locator('#serverReviewMarks').click();
+    await wait(page,()=>document.getElementById('serverPublicationStatus').textContent.includes('Server review/stage blocked')&&!document.getElementById('serverReviewMarks').disabled);
+    assert.deepEqual(blockedRequests,[{method:'GET',path:'/api/v47/runtime-status',hasAuthorization:false}]);
+    await verifyBlockedUnchanged();
+    await page.unroute(runtimePattern);
+    blockedRequests.length=0;
+    await page.route(runtimePattern,route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({format:'smss-v47-runtime-status-v1',version:'V47',publicationEnabled:false,atomicAttendanceEnabled:false,productionReady:false,cdcGradeApproved:false})}));
+    await page.locator('#serverReviewMarks').click();
+    await wait(page,()=>document.getElementById('serverPublicationStatus').textContent.includes('आधिकारिक प्रकाशन बन्द छ')&&!document.getElementById('serverReviewMarks').disabled);
+    assert.deepEqual(blockedRequests,[{method:'GET',path:'/api/v47/runtime-status',hasAuthorization:false},{method:'GET',path:'/api/v47/publication-review',hasAuthorization:true}]);
+    await verifyBlockedUnchanged();
+    console.log('PASS Spark static and read-only runtime browser guards: no ID token to static fallback, no POST, confirmation or publication change');
+   }finally{await page.unroute(runtimePattern);page.off('request',captureRequest);page.off('dialog',refuseUnexpectedDialog)}
    // Unsaved UI edits must not become published marks.
    await page.locator('#classMarkRows input[data-field="got"]').fill('1');
    const dialogs=[];
