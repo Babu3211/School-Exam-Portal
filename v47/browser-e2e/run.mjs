@@ -194,6 +194,22 @@ try{
   await page.locator('#exportExcel').click();const download=await downloadPromise;
   assert.match(download.suggestedFilename(),/UNAPPROVED-.*\.xlsx$/);
   const bytes=await readFile(await download.path());assert.equal(bytes.subarray(0,2).toString(),'PK');
+  // Switch from a successfully rendered report to a term with no migrated
+  // marks. Reuse the actual authenticated UI; do not fabricate any score.
+  if(role==='school_admin'){
+   await page.locator('#term').selectOption('1st');
+   await page.locator('#reportSource').selectOption('legacy');
+   await page.locator('#load').click();
+   await wait(page,()=>document.getElementById('message').textContent.includes('0 अङ्क अभिलेख उपलब्ध'));
+   assert.match(await page.locator('#message').textContent(),/पूर्ण Grade Preview तयार भएन/);
+   assert.equal(await page.locator('#ledgerArea').isVisible(),false);
+   assert.equal(await page.locator('#sheetArea').isVisible(),false);
+   assert.equal(await page.locator('#gradeOutput').textContent(),'');
+   assert.equal(await page.locator('#sheetFrame').getAttribute('srcdoc'),null);
+   assert.equal(await page.locator('#exportExcel').isDisabled(),true);
+   assert.equal(await page.locator('#printSheet').isDisabled(),true);
+   console.log('PASS incomplete legacy term shows Nepali counts, clears previous report and disables print/export');
+  }
   await page.locator('#logout').click();await wait(page,()=>document.getElementById('reportArea').hidden);
   assert.equal(await page.locator('#gradeOutput').textContent(),'');
  }
