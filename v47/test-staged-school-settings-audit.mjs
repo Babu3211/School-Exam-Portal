@@ -86,18 +86,25 @@ import {summarizeTermCompatibility} from './diagnostics/staged-school-settings-a
  assert.equal(report.distinctSingleSourceSubjects,1);
  assert.equal(report.byTerm['1st']['Schema compatible'],1);
  assert.equal(report.byTerm['2nd']['Schema compatible'],1);
- assert.equal(report.byTerm.final['Component mismatch'],1);
+ assert.equal(report.byTerm.final['Configured settings valid'],1);
  assert.equal(report.termAssigned,false);assert.equal(report.writeAuthorized,false);
  const conflicting=summarizeTermCompatibility({...input,settings:[termSettings,{...termSettings,id:'oldc9b'}]});
  assert.equal(conflicting.conflictingTargets,1);assert.equal(conflicting.distinctSingleSourceSubjects,0);
  const annual={...termSettings,fields:{...termSettings.fields,components:[...termSettings.fields.components,{name:'TH (Theory)',fullMarks:50}]}};
  const ar=summarizeTermCompatibility({...input,settings:[annual]});
- assert.equal(ar.byTerm.final['Schema compatible'],1);assert.equal(ar.byTerm['1st']['Component mismatch'],1);
+ assert.equal(ar.byTerm.final['Schema compatible'],1);assert.equal(ar.byTerm['1st']['Configured settings valid'],1);
  const primarySubject=row('p1',{class:'1',name:'Mathematics',active:true});
  const primarySetting=row('p1old',{classGroup:'1-3',className:'1',subject:'गणित',components:[{name:'No. of Learning Achievement',fullMarks:3},{name:'Full Marks',fullMarks:12},{name:'Obtained Learning Achievement',fullMarks:12}]});
  const pr=summarizeTermCompatibility({schoolId,subjects:[primarySubject],settings:[primarySetting]});
  assert.equal(pr.byTerm.final['Schema compatible'],1);
  assert.equal(pr.byTerm['1st']['Schema compatible'],1);
  const bad={...termSettings,fields:{...termSettings.fields,components:[{name:'Participation',fullMarks:5},{name:'Practical/Project',fullMarks:36},{name:'First Term Examination',fullMarks:10}]}};
- assert.equal(summarizeTermCompatibility({...input,settings:[bad]}).noCompatibleTerm,1);
+ const custom=summarizeTermCompatibility({...input,settings:[bad]});assert.equal(custom.noCompatibleTerm,0);assert.equal(custom.byTerm['1st']['Configured settings valid'],1);
+}
+
+{
+ const primarySubject=row('p1',{class:'1',name:'Mathematics',active:true});
+ const custom=row('p1custom',{classGroup:'1-3',className:'1',subject:'Math',components:[{name:'Assessment',fullMarks:137.5},{name:'Project',fullMarks:62.5}]});
+ const report=summarizeTermCompatibility({schoolId,subjects:[primarySubject],settings:[custom]});
+ assert.equal(report.distinctSingleSourceSubjects,1);assert.equal(report.byTerm.final['Configured settings valid'],1);
 }

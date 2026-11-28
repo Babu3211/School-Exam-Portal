@@ -1,4 +1,4 @@
-import {previewV46MarkSettingsMigration} from './preview-v46-mark-settings-migration.mjs';
+import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement} from './preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from './preview-v46-primary-achievement-settings.mjs';
 
 // Batch-level READ-ONLY audit. Refuse ambiguous target identities and
@@ -13,7 +13,7 @@ export function auditV46MarkSettingsBatch({records,schoolId,examId}){
    const target=JSON.stringify([schoolId,row.classId,row.subjectId,examId]);
    if(targets.has(target))throw new Error('Duplicate target subject examination settings');
    const input={legacy:row.legacy,schoolId,classId:row.classId,subjectId:row.subjectId,examId,verifiedSubjectName:row.verifiedSubjectName};
-   const preview=['1','2','3','4','5'].includes(row.classId)?previewV46PrimaryAchievementSettings(input):previewV46MarkSettingsMigration(input);
+   const preview=['1','2','3','4','5'].includes(row.classId)&&isLegacyPrimaryAchievement(row.legacy)?previewV46PrimaryAchievementSettings(input):previewV46MarkSettingsMigration(input);
    targets.add(target);
    previews.push(Object.freeze({index,classId:row.classId,subjectId:row.subjectId,kind:preview.requiresDedicatedIemisEntry?'primary-achievement':'component-marks',preview}));
   }catch(error){errors.push(Object.freeze({index,message:String(error?.message||error)}))}

@@ -9,7 +9,7 @@ import {join} from 'node:path';
 import {excelWorkbook} from '../excel-workbook.mjs';
 import {auditAllTermSettingsCoverage,auditEntrySettingsCoverage} from '../entry-settings-coverage.mjs';
 import {prepareNewSubjectExamSettings} from '../create-subject-exam-settings.mjs';
-import {previewV46MarkSettingsMigration} from '../preview-v46-mark-settings-migration.mjs';
+import {previewV46MarkSettingsMigration,isLegacyPrimaryAchievement} from '../preview-v46-mark-settings-migration.mjs';
 import {previewV46PrimaryAchievementSettings} from '../preview-v46-primary-achievement-settings.mjs';
 import {iemisSubjectKey} from '../iemis-ledger.js';
 import {primarySubjectKey} from '../primary-assessment-teacher-worksheet.mjs';
@@ -69,7 +69,7 @@ function legacyCandidateRows({schoolId,subjects,settings}){
      // The preview validator takes a term; a fixed validation-only sentinel
      // checks legacy components without declaring an actual term or producing a write.
      const args={schoolId,classId:r.fields.class,subjectId:r.id,examId:'1st',verifiedSubjectName:r.fields.name,legacy:{...d,subject:r.fields.name,...(specific?{className:specific}:{})}};
-     (Number(r.fields.class)<=5?previewV46PrimaryAchievementSettings:previewV46MarkSettingsMigration)(args);
+     (Number(r.fields.class)<=5&&isLegacyPrimaryAchievement(args.legacy)?previewV46PrimaryAchievementSettings:previewV46MarkSettingsMigration)(args);
      validComponents++;
     }catch{}
    }
@@ -102,7 +102,7 @@ function termCompatibility(row,schoolId,examId){
  const args={legacy,schoolId,classId,subjectId,examId,verifiedSubjectName:target.fields.name};
  try{
   let components;
-  if(Number(classId)<=5){
+  if(Number(classId)<=5&&isLegacyPrimaryAchievement(legacy)){
    const p=previewV46PrimaryAchievementSettings(args);
    components=[{key:'count',name:'No. of Learning Achievement',fullMarks:p.learningAchievementCount},{key:'obtained',name:'Obtained Learning Achievement',fullMarks:p.obtainedAchievementMaximum}];
   }else{
@@ -110,7 +110,7 @@ function termCompatibility(row,schoolId,examId){
   }
   const settings=prepareNewSubjectExamSettings({schoolId,classId,subjectId,examId,components});
   const audit=auditEntrySettingsCoverage({schoolId,classId,examId,subjects:[{id:subjectId,name:target.fields.name,active:true}],settings:[settings]});
-  return audit.rows[0].status==='Schema match'?'Schema compatible':'Component mismatch';
+  return audit.rows[0].status==='Schema match'?'Schema compatible':audit.rows[0].status==='Configured settings valid'?'Configured settings valid':'Invalid candidate settings';
  }catch{return 'Invalid candidate settings'}
 }
 export function summarizeTermCompatibility({schoolId,subjects,settings}){
@@ -124,7 +124,7 @@ export function summarizeTermCompatibility({schoolId,subjects,settings}){
  const details=unique.map(row=>({row,statuses:Object.fromEntries(terms.map(t=>[t,termCompatibility(row,schoolId,t)]))}));
  const byTerm=Object.fromEntries(terms.map(t=>[t,countBy(details,r=>r.statuses[t])]));
  return {distinctSingleSourceSubjects:unique.length,conflictingTargets:[...byTarget.values()].filter(g=>g.length>1).length,byTerm,
-  noCompatibleTerm:details.filter(r=>terms.every(t=>r.statuses[t]!=='Schema compatible')).length,
+  noCompatibleTerm:details.filter(r=>terms.every(t=>!['Schema compatible','Configured settings valid'].includes(r.statuses[t]))).length,
   termAssigned:false,writeAuthorized:false,iemisVerified:false};
 }
 export function summarizeLegacySettings({schoolId,subjects,settings}){
@@ -150,7 +150,7 @@ export function summarizeLegacySettings({schoolId,subjects,settings}){
      for(const candidate of candidates)try{
       const classId=candidate.fields.class,legacy={...d,...(specific?{className:specific}:{})};
       const args={legacy,schoolId,classId,subjectId:candidate.id,examId:record.term,verifiedSubjectName:candidate.fields.name};
-      (Number(classId)<=5?previewV46PrimaryAchievementSettings:previewV46MarkSettingsMigration)(args);
+      (Number(classId)<=5&&isLegacyPrimaryAchievement(args.legacy)?previewV46PrimaryAchievementSettings:previewV46MarkSettingsMigration)(args);
       record.validPreviews++;
      }catch{}
      if(record.validPreviews===candidates.length)record.kind='Exact mapping preview only';

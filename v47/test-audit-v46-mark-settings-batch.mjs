@@ -34,7 +34,7 @@ import {auditEntrySettingsCoverage} from './entry-settings-coverage.mjs';
  assert.equal(audit([]).rows[0].status,'Missing active settings');
  assert.equal(audit([{...d,id:'legacy_id'}]).rows[0].status,'Noncanonical settings ID');
  assert.equal(audit([d,{...d,id:'duplicate'}]).rows[0].status,'Duplicate active settings');
- assert.equal(audit([{...d,components:components.map((c,i)=>i===0?{...c,fullMarks:3}:c)}]).rows[0].status,'Component mismatch');
+ const custom=audit([{...d,components:components.map((c,i)=>i===0?{...c,fullMarks:7}:c)}]);assert.equal(custom.rows[0].status,'Configured settings valid');assert.equal(custom.matched,1);assert.equal(custom.customValid,1);assert.equal(custom.referenceMatched,0);assert.equal(custom.reviewRequired,0);
  assert.equal(audit([d],[]).rows[0].status,'Settings without registered subject');
  assert.throws(()=>audit([{...d,schoolId:'54321'}]),/foreign/);
  const primary={...d,classId:'1',id:'1_computer_1st',components:[{key:'count',name:'No. of Learning Achievement',fullMarks:10},{key:'obtained',name:'Obtained Learning Achievement',fullMarks:40}]};
@@ -65,4 +65,14 @@ import {auditAllTermSettingsCoverage,allTermSettingsAuditWorkbook} from './entry
  const file=allTermSettingsAuditWorkbook(result);assert.equal(file.filename,'V47-SETTINGS-AUDIT-12345-9-ALL-TERMS.xlsx');
  assert.match(new TextDecoder().decode(await file.blob.arrayBuffer()),/Missing active settings/);
  assert.throws(()=>allTermSettingsAuditWorkbook({...result,iemisVerified:true}),/Invalid/);
+}
+
+{
+ const schoolId='12345',examId='final',subjects=[{id:'math',name:'Mathematics',active:true}];
+ for(const classId of ['ECD','LKG','UKG',...Array.from({length:12},(_,i)=>String(i+1))]){
+  const setting={schoolId,classId,examId,subjectId:'math',id:classId+'_math_final',active:true,components:[{key:'a',name:'Assessment',fullMarks:137.5},{key:'b',name:'Project',fullMarks:62.5}]};
+  const r=auditEntrySettingsCoverage({schoolId,classId,examId,subjects,settings:[setting]});
+  assert.equal(r.matched,1,classId);assert.equal(r.customValid,1,classId);assert.equal(r.reviewRequired,0,classId);assert.match(r.rows[0].configured,/137.5/);
+  assert.equal(auditEntrySettingsCoverage({schoolId,classId,examId,subjects,settings:[{...setting,components:[{...setting.components[0],fullMarks:-1}]}]}).reviewRequired,1);
+ }
 }
