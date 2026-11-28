@@ -12,7 +12,7 @@ import {legacyGradePreviewExcel} from './legacy-grade-report-preview.mjs';
 const $=id=>document.getElementById(id),status=s=>{$('message').textContent=s};
 const reportMode=['number','entry'].includes(document.documentElement.dataset.report)?document.documentElement.dataset.report:'grade';
 const requestedSchool=new URL(location.href).searchParams.get('schoolId');
-let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null;
+let auth,authSdk,api,db,actor=null,schoolId=null,sessionSeq=0,reviewSeq=0,sheetSeq=0,loading=false,busy=false,report=null,configuredTable=null,configuredPage=0;
 const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));return snap.exists()?snap.data():null};
 const pairSelect=$('terminalSecondStudent');
 function resetPair(){if(pairSelect){pairSelect.replaceChildren(new Option('Single Grade Sheet',''));pairSelect.disabled=true;$('terminalPairArea').hidden=true}}
@@ -20,7 +20,7 @@ function selectedPair(){return pairSelect?.value||''}
 function sheetKey(){return JSON.stringify([$('student').value,selectedPair()])}
 function selectedSheet(){return selectedPair()?combineTerminalGradeSheets(id=>report.printFor(id),[$('student').value,selectedPair()],$('term').value):report.printFor($('student').value)}
 function clearReview(){
- resetPair();
+ resetPair();configuredTable=null;configuredPage=0;if($('configuredPaging'))$('configuredPaging').hidden=true;
  reviewSeq++;sheetSeq++;report=null;$('cancel').disabled=true;$('ledgerArea').hidden=true;$('sheetArea').hidden=true;
  $('student').replaceChildren();$('student').disabled=true;$('gradeOutput').replaceChildren();
  $('previewSheet').disabled=true;$('printSheet').disabled=true;$('exportExcel').disabled=true;
@@ -28,7 +28,7 @@ function clearReview(){
  $('progress').textContent='सम्पूर्ण कक्षाको पूर्वावलोकन लोड भएको छैन।';
 }
 function resetExamSelection(){ $('legacyExam').replaceChildren(new Option('Automatic (Term only)','')); $('legacyExam').disabled=true; $('legacyExamArea').hidden=$('reportSource').value!=='legacy'; }
-function clearSession(){sessionSeq++;clearReview();$('reportSource').value='legacy';resetExamSelection();$('reportSource').querySelector('option[value="draft"]').disabled=true;actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
+function clearSession(){sessionSeq++;clearReview();$('reportSource').value='legacy';resetExamSelection();$('reportSource').querySelector('option[value="draft"]').disabled=true;if($('reportSource').querySelector('option[value="configuredDraft"]'))$('reportSource').querySelector('option[value="configuredDraft"]').disabled=true;actor=null;schoolId=null;$('reportArea').hidden=true;$('logout').disabled=true}
 function assertCurrent(seq,review,member,klass,term){
  if(seq!==sessionSeq||review!==reviewSeq||actor!==member||schoolId!==member.schoolId||
   auth?.currentUser?.uid!==member.uid||$('schoolClass').value!==klass||$('term').value!==term)
@@ -63,7 +63,7 @@ $('login').onclick=async()=>{
   const school=await readDocument('schools/'+sid);
   if(seq!==sessionSeq||auth.currentUser?.uid!==uid||!school||school.id!==sid||school.active!==true)throw Error('School sign-in changed');
   actor={uid,schoolId:sid,role:session.role,active:true};schoolId=sid;
-  $('reportSource').querySelector('option[value="draft"]').disabled=session.role!=='school_admin';
+  $('reportSource').querySelector('option[value="draft"]').disabled=session.role!=='school_admin';if($('reportSource').querySelector('option[value="configuredDraft"]'))$('reportSource').querySelector('option[value="configuredDraft"]').disabled=session.role!=='school_admin';
   if(fresh)startVerifiedSchoolActivity();{const activityMember=actor;bindVerifiedModuleActivity(activityMember,()=>actor===activityMember&&auth?.currentUser?.uid===activityMember.uid);}
   $('verifiedLabel').textContent=String(school.name??sid)+' · '+sid+' · '+session.role;
   $('reportArea').hidden=false;$('logout').disabled=false;status('विद्यालय प्रमाणित भयो।');
@@ -107,6 +107,20 @@ function showSheet(){
   frame.srcdoc=doc.html;
  }catch(e){frame.removeAttribute('srcdoc');$('sheetStatus').textContent=neError(e)}
 }
+function renderConfiguredPage(){
+ if(!configuredTable||!report?.configuredMarksPreview)return;
+ const size=200,total=configuredTable.rows.length,start=configuredPage*size;
+ const table=document.createElement('table'),head=document.createElement('thead'),body=document.createElement('tbody');
+ const header=document.createElement('tr');for(const h of configuredTable.headers){const th=document.createElement('th');th.textContent=h;header.append(th)}head.append(header);
+ for(const row of configuredTable.rows.slice(start,start+size)){const tr=document.createElement('tr');for(const v of row){const td=document.createElement('td');td.textContent=String(v);tr.append(td)}body.append(tr)}
+ table.append(head,body);$('gradeOutput').replaceChildren(table);
+ $('configuredPaging').hidden=false;$('configuredPageLabel').textContent=(start+1)+'–'+Math.min(start+size,total)+' / '+total;
+ $('configuredPrevious').disabled=configuredPage===0;$('configuredNext').disabled=start+size>=total;
+}
+if($('configuredPaging')){
+ $('configuredPrevious').onclick=()=>{if(configuredPage>0){configuredPage--;renderConfiguredPage()}};
+ $('configuredNext').onclick=()=>{if(configuredTable&&(configuredPage+1)*200<configuredTable.rows.length){configuredPage++;renderConfiguredPage()}};
+}
 $('load').onclick=async()=>{
  if(loading||busy||!actor)return;
  clearReview();const seq=sessionSeq,review=reviewSeq,member=actor,klass=$('schoolClass').value,term=$('term').value;
@@ -115,7 +129,7 @@ $('load').onclick=async()=>{
  loading=true;$('load').disabled=true;$('cancel').disabled=false;
  try{
   await verifyAgain(member,seq,review,klass,term);
-  const data=source==='sparkCommitted'?await loadSparkCommittedReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='draft'?await loadSparkDraftReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='committed'
+  const data=source==='sparkCommitted'?await loadSparkCommittedReport({db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):(source==='draft'||source==='configuredDraft')?await loadSparkDraftReport({configuredMarks:source==='configuredDraft',db,api,auth,actor:member,schoolId:member.schoolId,classNo:klass,term,assertCurrent:check,onProgress:s=>{check();$('progress').textContent=s}}):source==='committed'
    ?await loadCommittedReportPreview({schoolId:member.schoolId,classNo:klass,term,
     getIdToken:()=>auth.currentUser.getIdToken(),fetchImpl:(...args)=>fetch(...args),assertCurrent:check})
    :source==='legacy'?await loadVerifiedLegacyGradeReport({db,api:{...api,getDocs:api.getDocsFromServer},auth,actor:member,schoolId:member.schoolId,
@@ -124,6 +138,14 @@ $('load').onclick=async()=>{
   if(!data)throw Error('Unknown report source');
   await verifyAgain(member,seq,review,klass,term);
   check();report=data;
+  if(data.configuredMarksPreview===true){
+   if(source!=='configuredDraft'||member.role!=='school_admin'||!['number','entry'].includes(reportMode)||!$('configuredPaging'))throw Error('Configured marks review is not a grade report');
+   configuredTable=data.tableFor(reportMode);configuredPage=0;renderConfiguredPage();
+   $('ledgerArea').hidden=false;$('exportExcel').disabled=false;
+   $('progress').textContent=data.rosterCount+' विद्यार्थी / '+data.subjectCount+' विषय — विद्यालयको Assessment Settings अनुसार सुरक्षित मस्यौदा।';
+   status('निजी Draft अङ्क समीक्षा मात्र। GPA वा आधिकारिक Grade Sheet होइन।');
+   return;
+  }
   $('progress').textContent=data.rosterCount+' विद्यार्थी / '+data.subjectCount+' विषय — मिल्ने सबै अङ्क अभिलेख जाँचिए।';
   // iemisLedger HTML cells are escaped by the original V46 rendering module.
   const table=document.createElement('table'),thead=document.createElement('thead'),tbody=document.createElement('tbody');
@@ -172,10 +194,10 @@ $('exportExcel').onclick=async()=>{
  $('exportExcel').disabled=true;
  try{
   await verifyAgain(member,seq,review,klass,term);
-  const blob=legacyGradePreviewExcel(report,reportMode);
+  const blob=report.configuredMarksPreview===true?report.excelFor(reportMode):legacyGradePreviewExcel(report,reportMode);
   const url=URL.createObjectURL(blob),link=document.createElement('a');
   try{
-   link.href=url;link.download='smss-v47-UNAPPROVED-'+({grade:'grade-ledger',number:'mark-ledger',entry:'mark-entry-ledger'}[reportMode])+'-'+member.schoolId+'-'+klass+'-'+term+(report.examId&&report.examId!==term?'-'+report.examId:'')+'.xlsx';
+   link.href=url;link.download=(report.configuredMarksPreview===true?'smss-v47-CONFIGURED-DRAFT-':'smss-v47-UNAPPROVED-')+({grade:'grade-ledger',number:'mark-ledger',entry:'mark-entry-ledger'}[reportMode])+'-'+member.schoolId+'-'+klass+'-'+term+(report.examId&&report.examId!==term?'-'+report.examId:'')+'.xlsx';
    document.body.append(link);link.click();
   }finally{link.remove();URL.revokeObjectURL(url)}
   status('Excel पूर्वावलोकन निकालियो। यो आधिकारिक Ledger होइन।');

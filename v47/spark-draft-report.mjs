@@ -7,12 +7,15 @@ import {verifyStoredCompleteClassDraft} from './restore-complete-class-draft.mjs
 import {isActiveEnrolledStudent} from './student-enrollment-status.mjs';
 import {convertVerifiedSubjectPreview} from './iemis-verified-subject-preview.mjs';
 import {validateSchoolId} from './school-paths.mjs';
-export async function loadSparkDraftReport({db,api,auth,actor,schoolId,classNo,term,assertCurrent,onProgress=()=>{}}){
+import {validSchoolClass} from './class-catalog.mjs';
+import {validateExamTerm} from './term-catalog.mjs';
+import {prepareConfiguredMarksReview} from './configured-marks-review.mjs';
+export async function loadSparkDraftReport({db,api,auth,actor,schoolId,classNo,term,assertCurrent,onProgress=()=>{},configuredMarks=false}){
  validateSchoolId(schoolId);
  const uid=auth?.currentUser?.uid;
  if(!uid||actor?.uid!==uid||actor?.schoolId!==schoolId||actor?.active!==true||actor?.role!=='school_admin'||typeof assertCurrent!=='function')
   throw Error('School Admin required for private Draft preview');
- if(!/^(?:[1-9]|10)$/.test(classNo)||!['1st','2nd','3rd','final'].includes(term))throw Error('IEMIS Classes 1–10 and exam terms only');
+ if(configuredMarks===true){if(!validSchoolClass(classNo))throw Error('Invalid class');validateExamTerm(term)}else if(!/^(?:[1-9]|10)$/.test(classNo)||!['1st','2nd','3rd','final'].includes(term))throw Error('IEMIS Classes 1–10 and exam terms only');
  const check=()=>{assertCurrent();if(auth.currentUser?.uid!==uid||actor.role!=='school_admin'||actor.active!==true||actor.schoolId!==schoolId)throw Error('School session changed')};
  const readDocument=async path=>{const snap=await api.getDocFromServer(api.doc(db,...path.split('/')));check();return snap.exists()?snap.data():null};
  const verify=async()=>{check();const session=await verifySchoolSession({schoolId,uid,readDocument});check();if(session.role!=='school_admin')throw Error('School Admin revoked')};
@@ -52,7 +55,8 @@ export async function loadSparkDraftReport({db,api,auth,actor,schoolId,classNo,t
  const afterSubjects=await subjectsQuery();
  if(!same(after.students,roster.students)||!same(afterSubjects,subjects))throw Error('Roster or subjects changed during Draft review; reload');
  await verify();
- const result=convertVerifiedSubjectPreview({schoolId,school:snapshot.school,classNo,term,students:roster.students,subjects,bySubject:snapshot.bySubject});check();
+ const input={schoolId,school:snapshot.school,classNo,term,students:roster.students,subjects,bySubject:snapshot.bySubject};
+ const result=configuredMarks===true?prepareConfiguredMarksReview(input):convertVerifiedSubjectPreview(input);check();
  return Object.freeze({...result,draftPreview:true,publicationAllowed:false});
 }
 function canonical(v){

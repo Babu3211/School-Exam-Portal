@@ -77,3 +77,28 @@ console.log('PASS Spark Draft reports: 30 class/term combinations, two subjects,
  await assert.rejects(loadSparkDraftReport({...args,classNo:klass,term:exam}));
 }
 console.log('PASS saved secondary Draft absence through school-scoped read-only report loader');
+
+{
+ const klass='12',exam='monthly',sid='custom',key=klass+'_'+sid+'_'+exam;
+ for(const k of [...docs.keys()])if(/\/(students|subjects|mark_settings|class_mark_drafts)\//.test(k))docs.delete(k);
+ for(const st of ['s1','s2'])docs.set(base+'/students/'+st,{schoolId,class:klass,name:'Student '+st,active:true});
+ docs.set(base+'/subjects/'+sid,{schoolId,class:klass,name:'Custom Assessment',active:true});
+ const components=[{key:'a',name:'Assessment',fullMarks:137.5},{key:'b',name:'Project',fullMarks:62.5}];
+ docs.set(base+'/mark_settings/'+key,{id:key,schoolId,classId:klass,subjectId:sid,examId:exam,active:true,components});
+ const path=base+'/class_mark_drafts/'+key;
+ const fixture={format:'smss-v47-complete-class-draft-v1',state:'draft',schoolId,classId:klass,subjectId:sid,examId:exam,settingsId:key,rosterCount:2,revision:1,updatedBy:uid,updatedAt:'test',entries:[{studentId:'s1',isAbsent:false,values:{a:100,b:50},totalObtained:150},{studentId:'s2',isAbsent:true,values:null,totalObtained:0}]};
+ docs.set(path,fixture);
+ const q={...args,classNo:klass,term:exam,configuredMarks:true};
+ const report=await loadSparkDraftReport(q);
+ assert.equal(report.configuredMarksPreview,true);assert.equal(report.publicationAllowed,false);
+ assert.deepEqual(report.tableFor('number').rows[0],['s1','Student s1','Custom Assessment','Recorded',150,200,75]);
+ assert.deepEqual(report.tableFor('number').rows[1].slice(-4),['Absent','—',200,'—']);
+ assert.match(report.tableFor('entry').rows[0][7],/137.5/);
+ assert.throws(()=>report.tableFor('grade'),/marks only/);
+ assert.match(new TextDecoder().decode(await report.excelFor('entry').arrayBuffer()),/PRIVATE DRAFT — NOT FOR OFFICIAL USE/);
+ await assert.rejects(loadSparkDraftReport({...q,actor:{...actor,role:'viewer'}}),/School Admin/);
+ await assert.rejects(loadSparkDraftReport({...q,configuredMarks:false}),/IEMIS/);
+ const bad=structuredClone(fixture);bad.entries[0].values.a=138;docs.set(path,bad);
+ await assert.rejects(loadSparkDraftReport(q));docs.set(path,fixture);
+}
+console.log('PASS configured class Draft review custom maxima, Class 12 monthly, absence, Excel, invalid marks and role denial');
